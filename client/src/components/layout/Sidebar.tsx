@@ -16,7 +16,8 @@ interface Props {
 
 export default function Sidebar({ items, active, onSelect }: Props) {
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-slate-800 bg-slate-950/60 p-4 md:block">
+    <>
+      <aside className="hidden w-60 shrink-0 border-r border-slate-800 bg-slate-950/60 p-4 md:block print:hidden">
       <nav className="flex flex-col gap-1">
         {items.map(({ id, label, icon: Icon, badge }) => {
           const isActive = id === active
@@ -40,5 +41,23 @@ export default function Sidebar({ items, active, onSelect }: Props) {
         })}
       </nav>
     </aside>
+      <nav aria-label="Main navigation" className="flex gap-1 overflow-x-auto border-b border-slate-800 bg-slate-950 px-2 py-1 md:hidden print:hidden">
+        {items.map(({ id, label, icon: Icon, badge }) => (
+          <button
+            key={id}
+            type="button"
+            aria-current={active === id ? 'page' : undefined}
+            onClick={() => onSelect(id)}
+            className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${
+              active === id ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+            }`}
+          >
+            <Icon className="size-4" />
+            {label}
+            {!!badge && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-semibold text-white">{badge}</span>}
+          </button>
+        ))}
+      </nav>
+    </>
   )
 }

@@ -14,3 +14,13 @@ Full-stack app that protects families from scams and fraud.
 5. Run the client: `cd client && npm run dev` (port 5173, proxies `/api` to the server).
 
 To populate demo data, configure `NESSIE_API_KEY` in the root `.env`, then run `cd server && npm run seed`. The seed script writes the generated account IDs to both `.env` files. Never commit `.env` files; only the example templates belong in Git.
+
+## Demo walkthrough
+
+For a local, three-role demo, set `DEV_BYPASS_AUTH=true` in the root `.env` and `VITE_DEV_BYPASS=true` in `client/.env`. Start the server and client as described above, then run `npm run seed` from `server/` to populate the Nessie demo account and create the held-transfer example.
+
+1. Choose **Child**, scan the account, open an alert, and send a neutral family check-in.
+2. Switch roles from the top banner, choose **Parent**, and respond that the activity is recognized or ask for help reviewing it.
+3. Switch to **Trustee** to see the case overview, timeline, audit log, and printable report.
+
+Family check-ins and parent display preferences use this browser's local storage for the prototype; they are not securely shared or suitable for production. The local development auth bypass must never be enabled in production.

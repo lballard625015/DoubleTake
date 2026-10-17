@@ -1,6 +1,6 @@
 // Slide-over panel: alert details, local rule-based guidance, and resolve/flag/note actions.
 import { useEffect, useRef, useState } from 'react'
-import { Check, Flag, Lightbulb, Loader2, NotebookPen, Send, ShieldCheck, X } from 'lucide-react'
+import { Check, Flag, Lightbulb, Loader2, MessageCircleHeart, NotebookPen, Send, ShieldCheck, X } from 'lucide-react'
 import { errorMessage } from '@/lib/api'
 import { RichText, STATUS_STYLE, TONE, TYPE_LABEL, timeAgo, urgencyTone } from '@/lib/format'
 import type { Alert, ChatMessage } from '@/types'
@@ -10,9 +10,11 @@ interface Props {
   onClose: () => void
   onUpdate: (id: string, patch: { status?: Alert['status']; notes?: string }) => Promise<unknown>
   onSend: (id: string, message: string) => Promise<unknown>
+  onRequestCheckIn: (alertId: string) => void
+  checkInSent: boolean
 }
 
-export default function AlertChat({ alert, onClose, onUpdate, onSend }: Props) {
+export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestCheckIn, checkInSent }: Props) {
   const [input, setInput] = useState('')
   const [pending, setPending] = useState<ChatMessage | null>(null)
   const [sending, setSending] = useState(false)
@@ -130,6 +132,9 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend }: Props) {
                   <p className="text-xs font-semibold uppercase tracking-wider text-yellow-700">Suggested conversation starter</p>
                   <p className="mt-1 text-sm italic text-yellow-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
                 </div>
+                <p className="mt-3 text-xs text-slate-500">
+                  This guide uses fixed rules, not AI. A check-in shares a neutral request to review a transaction—not this alert or its details.
+                </p>
               </div>
             </div>
 
@@ -213,7 +218,15 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend }: Props) {
                   {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 </button>
               </form>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onRequestCheckIn(alert.id)}
+                  disabled={checkInSent}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 disabled:cursor-default disabled:bg-sky-50 disabled:opacity-70"
+                >
+                  {checkInSent ? <Check className="size-4" /> : <MessageCircleHeart className="size-4" />}
+                  {checkInSent ? 'Check-in Sent' : 'Send Check-in'}
+                </button>
                 <button
                   onClick={() => void act({ status: 'resolved' })}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-500"

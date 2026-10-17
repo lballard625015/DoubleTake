@@ -8,7 +8,7 @@ export default function Navbar({ protectedName }: { protectedName?: string }) {
   const initials = name.replace(/@.*/, '').split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || 'U'
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-6 print:hidden">
       <div className="flex items-center gap-2.5">
         <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600">
           <ShieldCheck className="size-5 text-white" />

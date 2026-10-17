@@ -1,9 +1,13 @@
-// Trustee/attorney audit log: summary stats, filterable table of all alerts with expandable AI explanation and chat history, PDF export via print.
+// Trustee workspace: case overview, family timeline, audit log, and printable report.
 import { Fragment, useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Printer, ShieldCheck } from 'lucide-react'
+import { Activity, Bell, ChevronDown, ChevronRight, ClipboardCheck, FileText, Home, Printer, ShieldCheck, Users } from 'lucide-react'
 import { config } from '@/config'
+import Navbar from '@/components/layout/Navbar'
+import Sidebar from '@/components/layout/Sidebar'
+import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useAlerts } from '@/hooks/useAlerts'
-import { RichText, STATUS_STYLE, TYPE_LABEL } from '@/lib/format'
+import { useNessie } from '@/hooks/useNessie'
+import { RichText, STATUS_STYLE, timeAgo, TYPE_LABEL } from '@/lib/format'
 import type { Alert } from '@/types'
 
 const fmt = (iso?: string) =>
@@ -13,6 +17,10 @@ const rowTint = (score: number) => (score >= 8 ? 'bg-red-50' : score >= 5 ? 'bg-
 
 export default function TrusteeView() {
   const { alerts, error } = useAlerts()
+  const { holds, error: holdError } = useNessie()
+  const { checkIns } = useFamilyCheckIns()
+  const [tab, setTab] = useState('overview')
+  const [generatedAt] = useState(() => new Date().toISOString())
   const [status, setStatus] = useState('all')
   const [type, setType] = useState('all')
   const [from, setFrom] = useState('')
@@ -36,6 +44,14 @@ export default function TrusteeView() {
   const resolved = alerts.filter((a) => a.status === 'resolved').length
   const flagged = alerts.filter((a) => a.status === 'flagged').length
   const avg = total ? (alerts.reduce((s, a) => s + a.urgencyScore, 0) / total).toFixed(1) : '—'
+  const active = alerts.filter((a) => a.status !== 'resolved')
+  const pendingCheckIns = checkIns.filter((checkIn) => checkIn.status === 'awaiting')
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: Home },
+    { id: 'cases', label: 'Case log', icon: Bell, badge: active.length },
+    { id: 'timeline', label: 'Family timeline', icon: Activity },
+    { id: 'reports', label: 'Reports', icon: FileText },
+  ]
 
   const toggle = (id: string) =>
     setOpen((prev) => {
@@ -54,7 +70,7 @@ export default function TrusteeView() {
   const detail = (a: Alert) => (
     <div className="space-y-4 text-sm text-slate-700">
       <div>
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">AI explanation</p>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Rule-based explanation</p>
         <p className="leading-relaxed">{a.description}</p>
         {a.knownScamPattern && (
           <p className="mt-1 text-slate-500">Resembles known pattern: {a.knownScamPattern}</p>
@@ -86,8 +102,166 @@ export default function TrusteeView() {
   const select = 'rounded-md border border-slate-300 bg-white px-3 py-2 text-sm'
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white">
-      <div className="mx-auto max-w-7xl p-6 md:p-8">
+    <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100 print:bg-white">
+      <Navbar protectedName={config.protectedName} />
+      <div className="flex flex-1">
+        <Sidebar items={navItems} active={tab} onSelect={setTab} />
+        <main className="min-w-0 flex-1 p-5 md:p-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-6">
+              <p className="text-sm font-medium text-sky-300">Trustee workspace</p>
+              <h1 className="mt-1 text-3xl font-semibold text-white">
+                {tab === 'overview' ? `${config.protectedName}'s case overview` : tab === 'cases' ? 'Case log' : tab === 'timeline' ? 'Family timeline' : 'Trustee report'}
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">Review documented activity and family responses. Rule-based alerts are indicators, not findings.</p>
+            </div>
+          </div>
+
+          {(error || holdError) && (
+            <div role="alert" className="mx-auto mb-5 max-w-7xl rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {error ?? holdError}
+            </div>
+          )}
+
+          {tab === 'overview' && (
+            <section className="mx-auto max-w-7xl space-y-5">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: 'Active cases', value: active.length, icon: Bell },
+                  { label: 'Awaiting review', value: holds.filter((hold) => hold.status === 'held').length, icon: ClipboardCheck },
+                  { label: 'Family check-ins', value: checkIns.length, icon: Users },
+                  { label: 'Resolved', value: resolved, icon: ShieldCheck },
+                ].map(({ label, value, icon: Icon }) => (
+                  <div key={label} className="rounded-xl border border-slate-700 bg-slate-900 p-5">
+                    <div className="flex items-center justify-between text-sm text-slate-400">{label}<Icon className="size-4 text-sky-300" /></div>
+                    <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
+                  <div className="flex items-center justify-between">
+                    <div><h2 className="font-semibold text-white">Priority review</h2><p className="text-xs text-slate-400">Open cases, highest urgency first</p></div>
+                    <button onClick={() => setTab('cases')} className="text-sm text-sky-300 hover:underline">Open case log</button>
+                  </div>
+                  {active.length ? (
+                    <ul className="mt-4 space-y-2">
+                      {[...active].sort((a, b) => b.urgencyScore - a.urgencyScore).slice(0, 4).map((alert) => (
+                        <li key={alert.id} className="flex items-center gap-3 rounded-lg bg-slate-800 p-3">
+                          <span className={`rounded-md px-2 py-1 text-xs font-semibold ${alert.urgencyScore >= 8 ? 'bg-rose-400/10 text-rose-200' : 'bg-amber-400/10 text-amber-200'}`}>{alert.urgencyScore}/10</span>
+                          <span className="min-w-0 flex-1 truncate text-sm text-slate-100">{alert.title}</span>
+                          <span className="text-xs text-slate-400">{timeAgo(alert.createdAt)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="mt-4 text-sm text-slate-400">No active cases.</p>}
+                </div>
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
+                  <div className="flex items-center justify-between">
+                    <div><h2 className="font-semibold text-white">Family response</h2><p className="text-xs text-slate-400">Check-ins are local demo data on this browser</p></div>
+                    <button onClick={() => setTab('timeline')} className="text-sm text-sky-300 hover:underline">View timeline</button>
+                  </div>
+                  {pendingCheckIns.length ? (
+                    <p className="mt-4 text-sm text-amber-200">{pendingCheckIns.length} check-in{pendingCheckIns.length === 1 ? '' : 's'} awaiting a response.</p>
+                  ) : (
+                    <p className="mt-4 text-sm text-slate-400">{checkIns.length ? 'The family check-in has a response.' : 'No family check-ins recorded.'}</p>
+                  )}
+                  <p className="mt-3 text-xs text-slate-500">Responses indicate that a conversation happened; they do not verify an account transaction.</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {tab === 'timeline' && (
+            <section className="mx-auto max-w-4xl">
+              <div className="mb-5">
+                <h2 className="text-2xl font-semibold text-white">Family and case timeline</h2>
+                <p className="mt-1 text-sm text-slate-400">A chronological record of alerts and local demo check-ins.</p>
+              </div>
+              {(() => {
+                const events = [
+                  ...alerts.map((alert) => ({
+                    id: `alert-${alert.id}`,
+                    date: alert.createdAt,
+                    title: alert.title,
+                    detail: `${TYPE_LABEL[alert.type]} · urgency ${alert.urgencyScore}/10 · ${STATUS_STYLE[alert.status].label}`,
+                    icon: Bell,
+                  })),
+                  ...checkIns.map((checkIn) => ({
+                    id: `checkin-${checkIn.id}`,
+                    date: checkIn.respondedAt ?? checkIn.createdAt,
+                    title: checkIn.status === 'awaiting' ? 'Family check-in sent' : checkIn.status === 'recognized' ? 'Family member recognized activity' : 'Family member asked for help',
+                    detail: checkIn.status === 'awaiting' ? checkIn.message : `Request sent ${fmt(checkIn.createdAt)}${checkIn.respondedAt ? ` · response ${fmt(checkIn.respondedAt)}` : ''}`,
+                    icon: Users,
+                  })),
+                  ...holds.map((hold) => ({
+                    id: `hold-${hold.holdId}`,
+                    date: hold.status === 'held' ? hold.createdAt : hold.createdAt,
+                    title: hold.status === 'held' ? 'Transfer paused for review' : 'Transfer flagged for review',
+                    detail: `${hold.transferData.payee_name ?? 'New recipient'} · $${hold.transferData.amount.toFixed(2)}`,
+                    icon: ClipboardCheck,
+                  })),
+                ].sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+                return events.length ? (
+                  <ol className="space-y-3">
+                    {events.map(({ id, date, title, detail: text, icon: Icon }) => (
+                      <li key={id} className="flex gap-4 rounded-xl border border-slate-700 bg-slate-900 p-4">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-800 text-sky-300"><Icon className="size-4" /></div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap justify-between gap-2"><p className="font-medium text-white">{title}</p><time className="text-xs text-slate-400">{fmt(date)}</time></div>
+                          <p className="mt-1 text-sm text-slate-300">{text}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                ) : <p className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-slate-400">Timeline events will appear as alerts and check-ins are recorded.</p>
+              })()}
+            </section>
+          )}
+
+          {tab === 'reports' && (
+            <section className="mx-auto max-w-4xl rounded-2xl bg-white p-7 text-slate-900 shadow-sm print:max-w-none print:p-0 print:shadow-none">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-sky-700">SafeHarbor · Trustee report</p>
+                  <h2 className="mt-2 text-2xl font-semibold">{config.protectedName}</h2>
+                  <p className="mt-1 text-sm text-slate-500">Prepared {fmt(generatedAt)}</p>
+                </div>
+                <button onClick={() => window.print()} className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 print:hidden">
+                  <Printer className="size-4" /> Export / Print
+                </button>
+              </div>
+              <p className="mt-6 rounded-lg bg-sky-50 p-4 text-sm leading-relaxed text-sky-950">
+                This report summarizes monitoring events and family check-ins. Rule-based alerts are not findings of fraud. Family check-in data is stored locally for this prototype and is not a secure shared record.
+              </p>
+              <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+                {stats.map(([label, value]) => <div key={label} className="rounded-lg border border-slate-200 p-4"><p className="text-sm text-slate-500">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p></div>)}
+              </div>
+              <h3 className="mt-7 font-semibold">Open alerts</h3>
+              {active.length ? (
+                <ul className="mt-2 divide-y divide-slate-200">
+                  {[...active].sort((a, b) => b.urgencyScore - a.urgencyScore).map((alert) => (
+                    <li key={alert.id} className="py-3">
+                      <p className="font-medium">{alert.title} · urgency {alert.urgencyScore}/10</p>
+                      <p className="mt-1 text-sm text-slate-600">{alert.description}</p>
+                      {alert.notes && <p className="mt-1 text-sm text-slate-500">Case note: {alert.notes}</p>}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-2 text-sm text-slate-500">No open alerts.</p>}
+              <h3 className="mt-7 font-semibold">Recommended next steps</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+                <li>Confirm the transaction details with the account holder in a private, non-judgmental conversation.</li>
+                <li>For uncertain activity, contact the institution using a trusted phone number or official website.</li>
+                <li>Record the outcome of the review and follow the account holder&apos;s preferences.</li>
+              </ul>
+              <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">Generated from available alerts. This prototype does not independently verify transactions or provide legal or financial advice.</p>
+            </section>
+          )}
+
+          {tab === 'cases' && (
+            <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white">
+              <div className="mx-auto max-w-7xl p-6 md:p-8">
         <header className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-slate-900 print:hidden">
@@ -95,7 +269,7 @@ export default function TrusteeView() {
             </div>
             <div>
               <h1 className="text-2xl font-semibold">Full Audit Log — {config.protectedName}</h1>
-              <p className="text-sm text-slate-500">Generated {fmt(new Date().toISOString())}</p>
+              <p className="text-sm text-slate-500">Generated {fmt(generatedAt)}</p>
             </div>
           </div>
           <button
@@ -223,6 +397,10 @@ export default function TrusteeView() {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+          )}
+        </main>
       </div>
     </div>
   )

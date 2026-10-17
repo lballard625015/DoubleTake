@@ -68,3 +68,12 @@ export interface HeldTransfer {
   createdAt: string
   expiresAt: string
 }
+
+export interface FamilyCheckIn {
+  id: string
+  alertId: string
+  message: string
+  createdAt: string
+  status: 'awaiting' | 'recognized' | 'help_requested'
+  respondedAt?: string
+}

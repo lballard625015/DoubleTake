@@ -140,11 +140,18 @@
 
 .safeharbor-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 50% 0, rgb(219 234 254 / 0.42), transparent 42rem),
-    #f6f8fb;
+  background: #f8fafc;
   color: #172033;
 }
+
+.safeharbor-shell .rounded-2xl,
+.parent-workspace .rounded-2xl { border-radius: 0.625rem; }
+.safeharbor-shell .rounded-xl,
+.parent-workspace .rounded-xl { border-radius: 0.5rem; }
+.safeharbor-shell .rounded-lg,
+.parent-workspace .rounded-lg { border-radius: 0.375rem; }
+.safeharbor-shell .rounded-md,
+.parent-workspace .rounded-md { border-radius: 0.25rem; }
 
 .safeharbor-shell .text-white { color: #10243a; }
 .safeharbor-shell .text-slate-100 { color: #172033; }

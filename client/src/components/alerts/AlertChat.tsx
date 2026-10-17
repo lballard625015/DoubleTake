@@ -117,6 +117,25 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                 </div>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-slate-700">{alert.description}</p>
+              <section className="mt-4 border-y border-slate-200 py-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Why this was flagged</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                  {alert.ruleSummary ?? 'This alert matched a monitoring rule using the available account history.'}
+                </p>
+                {alert.triggerEvidence && alert.triggerEvidence.length > 0 && (
+                  <ul className="mt-3 space-y-2">
+                    {alert.triggerEvidence.map((evidence, index) => (
+                      <li key={`${index}-${evidence}`} className="flex gap-2 text-sm leading-relaxed text-slate-700">
+                        <span className="mt-2 size-1.5 shrink-0 bg-sky-700" />
+                        {evidence}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                  This is a rule match, not a finding of fraud. The rule only reflects data available to this demo.
+                </p>
+              </section>
               {alert.knownScamPattern && (
                 <p className="mt-2 text-xs text-slate-500">
                   Resembles: <span className="font-medium text-slate-700">{alert.knownScamPattern}</span>
@@ -127,15 +146,15 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                   <span className="font-semibold">Note:</span> {alert.notes}
                 </p>
               )}
-              <div className="mt-4 flex gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+              <div className="mt-4 flex gap-3 border-l-2 border-sky-700 bg-[#f8fafc] p-4">
                 <Lightbulb className="mt-0.5 size-5 shrink-0 text-yellow-600" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-yellow-700">Suggested conversation starter</p>
-                  <p className="mt-1 text-sm italic text-yellow-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Suggested conversation starter</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
+                  <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                    This guide uses fixed rules, not AI. A check-in shares a neutral request to review a transaction—not this alert or its details.
+                  </p>
                 </div>
-                <p className="mt-3 text-xs text-slate-500">
-                  This guide uses fixed rules, not AI. A check-in shares a neutral request to review a transaction—not this alert or its details.
-                </p>
               </div>
             </div>
 

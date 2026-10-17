@@ -7,6 +7,7 @@ import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { api, errorMessage } from '@/lib/api'
 import { money, timeAgo } from '@/lib/format'
+import { transactionCategoryName } from '@/lib/transaction'
 import type { NessieAccount, Transaction } from '@/types'
 
 const dateLabel = (iso: string) =>
@@ -44,6 +45,16 @@ export default function ParentView() {
 
   const pendingCheckIns = checkIns.filter((item) => item.status === 'awaiting')
   const visibleTxns = txns.filter((transaction) => filter === 'all' || transaction.type === filter)
+  const purchaseTxns = txns.filter((transaction) => transaction.type === 'purchase')
+  const purchaseByCategory = Object.entries(
+    purchaseTxns.reduce<Record<string, number>>((totals, purchase) => {
+      const category = transactionCategoryName(purchase.category)
+      totals[category] = (totals[category] ?? 0) + purchase.amount
+      return totals
+    }, {}),
+  ).sort(([, a], [, b]) => b - a)
+  const purchaseTotal = purchaseTxns.reduce((total, purchase) => total + purchase.amount, 0)
+  const largestCategorySpend = purchaseByCategory[0]?.[1] ?? 0
 
   const item = (
     icon: typeof ArrowUpRight,
@@ -68,7 +79,7 @@ export default function ParentView() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="parent-workspace min-h-screen bg-slate-50 text-slate-900">
       <div className="flex items-center justify-center gap-2 bg-sky-50 px-4 py-2 text-center text-sm text-sky-900">
         <ShieldCheck className="size-4" /> Protection is on · You stay in control of your account
       </div>
@@ -222,7 +233,39 @@ export default function ParentView() {
                 </select>
               </label>
             </div>
-            <div className="mt-5 divide-y divide-slate-100">
+            <section className="mt-6 border-y border-slate-200 py-4">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold">Purchase spending by category</h2>
+                  <p className="mt-1 text-sm text-slate-500">Purchases in the loaded activity · transfers and withdrawals are not included</p>
+                </div>
+                <p className="text-sm text-slate-600">{purchaseTxns.length} purchases · <span className="font-semibold tabular-nums text-slate-900">{money(purchaseTotal)}</span></p>
+              </div>
+              {purchaseByCategory.length ? (
+                <div className="divide-y divide-slate-100">
+                  {purchaseByCategory.map(([category, amount]) => (
+                    <div key={category} className="grid grid-cols-[minmax(7rem,0.7fr)_2fr_auto] items-center gap-4 py-2.5">
+                      <span className="text-sm font-medium text-slate-800">{category}</span>
+                      <div
+                        role="progressbar"
+                        aria-label={`${category} compared with the largest purchase category`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={largestCategorySpend > 0 ? Math.round((amount / largestCategorySpend) * 100) : 0}
+                        aria-valuetext={`${money(amount)}; ${purchaseTotal > 0 ? Math.round((amount / purchaseTotal) * 100) : 0}% of purchase total`}
+                        className="h-2 bg-slate-100"
+                      >
+                        <div className="h-full bg-sky-800" style={{ width: `${largestCategorySpend > 0 ? (amount / largestCategorySpend) * 100 : 0}%` }} />
+                      </div>
+                      <span className="min-w-24 text-right text-sm tabular-nums">{money(amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-3 text-sm text-slate-500">{loaded ? 'No purchase category data is available yet.' : 'Loading purchase breakdown…'}</p>
+              )}
+            </section>
+            <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200 bg-[#f8fafc]">
               {visibleTxns.map((transaction) => (
                 <div key={transaction.id} className="flex items-center gap-4 py-4">
                   <div className="flex size-11 items-center justify-center rounded-full bg-slate-100 text-slate-600">
@@ -230,7 +273,7 @@ export default function ParentView() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base font-medium">{transaction.merchant ?? transaction.type}</p>
-                    <p className="text-sm text-slate-500">{dateLabel(transaction.timestamp)} · {transaction.type}</p>
+                    <p className="text-sm text-slate-500">{dateLabel(transaction.timestamp)} · {transaction.type === 'purchase' ? transactionCategoryName(transaction.category) : transaction.type}</p>
                   </div>
                   <p className="text-base font-semibold tabular-nums">−{money(transaction.amount)}</p>
                 </div>

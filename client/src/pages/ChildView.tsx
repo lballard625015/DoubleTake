@@ -29,10 +29,10 @@ import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { config } from '@/config'
 import { api, errorMessage } from '@/lib/api'
 import { money, STATUS_STYLE, TONE, timeAgo, urgencyTone } from '@/lib/format'
+import { transactionCategoryName } from '@/lib/transaction'
 import type { Transaction } from '@/types'
 
 const dateLabel = (iso: string) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-
 export default function ChildView() {
   const { alerts, scanning, initialScanComplete, error, refresh, scan, update, sendMessage } = useAlerts(true)
   const { holds, error: holdError, resolveHold } = useNessie()
@@ -54,6 +54,16 @@ export default function ChildView() {
 
   const activeCount = alerts.filter((a) => a.status !== 'resolved').length
   const openAlert = alerts.find((a) => a.id === openId) ?? null
+  const purchases = transactions.filter((transaction) => transaction.type === 'purchase')
+  const purchaseCategories = Object.entries(
+    purchases.reduce<Record<string, number>>((totals, purchase) => {
+      const category = transactionCategoryName(purchase.category)
+      totals[category] = (totals[category] ?? 0) + purchase.amount
+      return totals
+    }, {}),
+  ).sort(([, a], [, b]) => b - a)
+  const purchaseTotal = purchases.reduce((total, purchase) => total + purchase.amount, 0)
+  const largestCategorySpend = purchaseCategories[0]?.[1] ?? 0
   const showAccountId = accountIdPreference.show
   const visibleCheckIns = plan.shareCheckInNotifications ? checkIns : []
   const shownError = error ?? holdError ?? activityError ?? planError ?? checkInError ?? accountIdPreference.error
@@ -156,10 +166,10 @@ export default function ChildView() {
                     <ul className="space-y-3">
                       {alerts.slice(0, 3).map((alert) => (
                         <li key={alert.id}>
-                          <button onClick={() => setOpenId(alert.id)} className="flex w-full items-center gap-3 rounded-lg bg-slate-800/70 p-3 text-left hover:bg-slate-800">
-                            <span className={`size-2.5 rounded-full ${TONE[urgencyTone(alert.urgencyScore)].border.replace('border-l-', 'bg-')}`} />
-                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{alert.title}</span>
-                            <span className="text-xs text-slate-400">{timeAgo(alert.createdAt)}</span>
+                          <button onClick={() => setOpenId(alert.id)} className="flex w-full items-center gap-3 border border-slate-200 bg-[#f8fafc] p-3 text-left hover:bg-slate-100">
+                            <span className={`size-2 shrink-0 ${TONE[urgencyTone(alert.urgencyScore)].border.replace('border-l-', 'bg-')}`} />
+                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">{alert.title}</span>
+                            <span className="text-xs text-slate-600">{timeAgo(alert.createdAt)}</span>
                           </button>
                         </li>
                       ))}
@@ -208,20 +218,57 @@ export default function ChildView() {
 
           {tab === 'activity' && (
             <section>
-              <h1 className="mb-5 text-2xl font-semibold text-white">Activity</h1>
+              <header className="mb-6 border-b border-slate-200 pb-5">
+                <p className="text-sm font-medium text-sky-700">Account history</p>
+                <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">Activity</h1>
+                <p className="mt-1 text-sm text-slate-600">Review recent purchases and monitoring events in one place.</p>
+              </header>
               {transactions.length === 0 && alerts.length === 0 ? (
                 <p className="text-sm text-slate-400">No activity yet.</p>
               ) : (
                 <div className="space-y-6">
                   <section>
-                    <h2 className="mb-3 text-sm font-semibold text-slate-300">Account transactions</h2>
+                    <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                      <div>
+                        <h2 className="text-lg font-semibold text-slate-950">Purchase spending by category</h2>
+                        <p className="mt-1 text-sm text-slate-600">Purchases only · based on up to the 25 most recent account transactions</p>
+                      </div>
+                      <p className="text-sm text-slate-600">{purchases.length} purchases · <span className="font-semibold tabular-nums text-slate-950">{money(purchaseTotal)}</span></p>
+                    </div>
+                    {purchaseCategories.length ? (
+                      <div className="border-y border-slate-200 bg-white px-5">
+                        {purchaseCategories.map(([category, amount]) => (
+                          <div key={category} className="grid grid-cols-[minmax(7rem,0.7fr)_2fr_auto] items-center gap-4 border-b border-slate-100 py-3 last:border-b-0">
+                            <span className="text-sm font-medium text-slate-800">{category}</span>
+                            <div
+                              role="progressbar"
+                              aria-label={`${category} compared with the largest recent purchase category`}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={largestCategorySpend > 0 ? Math.round((amount / largestCategorySpend) * 100) : 0}
+                              aria-valuetext={`${money(amount)}; ${purchaseTotal > 0 ? Math.round((amount / purchaseTotal) * 100) : 0}% of recent purchase total`}
+                              className="h-2 bg-slate-100"
+                            >
+                              <div className="h-full bg-sky-800" style={{ width: `${largestCategorySpend > 0 ? (amount / largestCategorySpend) * 100 : 0}%` }} />
+                            </div>
+                            <span className="min-w-24 text-right text-sm tabular-nums text-slate-900">{money(amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="border-y border-slate-200 bg-white p-4 text-sm text-slate-600">No purchase records are available in the recent transaction sample.</p>
+                    )}
+                  </section>
+                  <section>
+                    <h2 className="mb-3 text-lg font-semibold text-slate-950">Recent transactions</h2>
                     {transactions.length ? (
-                      <ul className="divide-y divide-slate-700 overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
+                      <ul className="divide-y divide-slate-200 border-y border-slate-200 bg-white">
                         {transactions.map((transaction) => (
-                          <li key={transaction.id} className="flex items-center gap-3 px-5 py-3.5">
-                            <span className="flex-1 text-sm text-slate-200">{transaction.merchant ?? transaction.type}</span>
-                            <span className="text-xs text-slate-400">{dateLabel(transaction.timestamp)}</span>
-                            <span className="w-24 text-right text-sm tabular-nums text-slate-100">{money(transaction.amount)}</span>
+                          <li key={transaction.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+                            <span className="min-w-40 flex-1 text-sm font-medium text-slate-900">{transaction.merchant ?? transaction.type}</span>
+                            <span className="min-w-24 text-sm text-slate-600">{transaction.type === 'purchase' ? transactionCategoryName(transaction.category) : transaction.type}</span>
+                            <span className="text-xs text-slate-500">{dateLabel(transaction.timestamp)}</span>
+                            <span className="w-24 text-right text-sm tabular-nums text-slate-900">{money(transaction.amount)}</span>
                           </li>
                         ))}
                       </ul>
@@ -230,7 +277,7 @@ export default function ChildView() {
                   <section>
                     <h2 className="mb-3 text-sm font-semibold text-slate-300">Alert history</h2>
                     {alerts.length ? (
-                      <ul className="divide-y divide-slate-700 overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
+                      <ul className="divide-y divide-slate-200 overflow-hidden border-y border-slate-200 bg-[#f8fafc]">
                         {[...alerts].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).map((a) => (
                           <li key={a.id}>
                             <button onClick={() => setOpenId(a.id)} className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-slate-800">

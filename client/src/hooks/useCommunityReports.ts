@@ -17,10 +17,45 @@ export interface CommunityScamReport {
   area: string
   summary: string
   createdAt: string
+  sample?: boolean
 }
 
 const STORAGE_KEY = 'doubletake:community-reports'
 const CHANGE_EVENT = 'doubletake:community-reports-changed'
+const DEMO_REPORTS: CommunityScamReport[] = [
+  {
+    id: 'sample-impersonation-call',
+    category: 'Impersonation call',
+    area: 'Orlando, FL',
+    summary: 'A caller claimed to be from the bank fraud team and urged the recipient to move savings to a “safe account.” The bank was contacted using the number on the card instead.',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    sample: true,
+  },
+  {
+    id: 'sample-text-link',
+    category: 'Text or email link',
+    area: 'Gainesville, FL',
+    summary: 'A text about an unpaid toll demanded a small fee through an unfamiliar link. The balance was checked on the toll agency’s official website instead.',
+    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+    sample: true,
+  },
+  {
+    id: 'sample-marketplace',
+    category: 'Online marketplace',
+    area: 'Central Florida',
+    summary: 'A buyer sent a payment screenshot showing more than the agreed price, then asked for the difference back. The payment was verified with the provider before any response.',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    sample: true,
+  },
+  {
+    id: 'sample-investment',
+    category: 'Investment offer',
+    area: 'Florida',
+    summary: 'An online contact promised guaranteed returns and requested cryptocurrency to join a private investment group. The offer was not independently verified and no funds were sent.',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    sample: true,
+  },
+]
 
 function isCategory(value: unknown): value is ScamCategory {
   return typeof value === 'string' && SCAM_CATEGORIES.includes(value as ScamCategory)
@@ -29,7 +64,10 @@ function isCategory(value: unknown): value is ScamCategory {
 function readReports(): { reports: CommunityScamReport[]; error: string | null } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return { reports: [], error: null }
+    if (saved === null) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_REPORTS))
+      return { reports: DEMO_REPORTS, error: null }
+    }
     const parsed: unknown = JSON.parse(saved)
     if (!Array.isArray(parsed)) throw new Error('Saved community reports have an invalid format.')
 
@@ -44,7 +82,12 @@ function readReports(): { reports: CommunityScamReport[]; error: string | null }
         typeof report.createdAt === 'string' &&
         Number.isFinite(Date.parse(report.createdAt)),
     )
-    return { reports, error: null }
+    const reportIds = new Set(reports.map((report) => report.id))
+    const missingSamples = DEMO_REPORTS.filter((report) => !reportIds.has(report.id))
+    if (missingSamples.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...missingSamples, ...parsed]))
+    }
+    return { reports: [...missingSamples, ...reports], error: null }
   } catch (error) {
     return {
       reports: [],

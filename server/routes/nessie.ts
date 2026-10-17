@@ -35,12 +35,14 @@ router.get('/account/:id/transactions', async (req, res) => {
   try {
     const snap = await getAccountSnapshot(id)
     const names = new Map(snap.merchants.map((m) => [m._id, m.name]))
+    const categories = new Map(snap.merchants.map((m) => [m._id, m.category]))
     const items = [
       ...snap.purchases.map((p) => ({
         id: p._id,
         type: 'purchase' as const,
         amount: p.amount,
         merchant: names.get(p.merchant_id) ?? p.description ?? 'Purchase',
+        category: categories.get(p.merchant_id),
         timestamp: p.purchase_date,
       })),
       ...snap.withdrawals.map((w) => ({

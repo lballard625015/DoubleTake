@@ -4,60 +4,68 @@ import type { Alert, ChatMessage } from '../types.js'
 import type { AccountSnapshot } from './nessieService.js'
 import type { PatternFlag, PatternType } from './patternEngine.js'
 
-const ALERT_DETAILS: Record<PatternType, { title: string; pattern: string; explanation: string; starter: string }> = {
+const ALERT_DETAILS: Record<PatternType, { title: string; pattern: string; explanation: string; rule: string; starter: string }> = {
   gift_card: {
     title: 'Possible gift card purchase',
     pattern: 'Gift card payment scam pattern',
     explanation: 'Gift cards are sometimes used by scammers because their value is difficult to recover once the codes are shared. This activity alone does not establish that a scam occurred.',
+    rule: 'A merchant or purchase description matched gift-card terms, or a pharmacy/grocery purchase exceeded $200.',
     starter: 'I noticed a purchase that stood out to me. Was it something you expected?',
   },
   new_merchant_velocity: {
     title: 'Many new merchants recently',
     pattern: 'Rapid spending at unfamiliar merchants',
     explanation: 'Several merchants appeared in a short period without earlier activity in the available history. This can be legitimate, but may also be worth checking for unfamiliar or unauthorized purchases.',
+    rule: 'At least three merchants with no earlier purchase in the available history were used within a 48-hour window.',
     starter: 'I saw a few purchases at places I didn’t recognize. Do those look familiar to you?',
   },
   atm_geolocation: {
     title: 'Unusual ATM withdrawal',
     pattern: 'Unusual ATM location or timing',
     explanation: 'A withdrawal was flagged because its location, timing, or proximity to another withdrawal differed from the rule’s thresholds. Confirm whether the withdrawal was expected before drawing conclusions.',
+    rule: 'A withdrawal was more than 50 miles from home, occurred between 10 p.m. and 6 a.m., or was within 24 hours of another withdrawal.',
     starter: 'Can we check whether this ATM withdrawal was yours?',
   },
   large_transfer: {
     title: 'Large transfer to new payee',
     pattern: 'Large or unfamiliar-payee transfer',
     explanation: 'A transfer was flagged because it was large and/or went to a payee not seen in the available history. Transfers can be legitimate; confirm the recipient and purpose using a trusted contact method.',
+    rule: 'A transfer over $500 went to a payee not seen in the prior 90 days, or a transfer exceeded three times the average of other transfers.',
     starter: 'I noticed a transfer to a recipient I didn’t recognize. Can you tell me what it was for?',
   },
   unusual_withdrawal: {
     title: 'Unusual withdrawal activity',
     pattern: 'Unusually large or frequent withdrawals',
     explanation: 'The amount or recent frequency of withdrawals crossed a monitoring threshold. There may be an ordinary explanation, so review the dates and amounts together.',
+    rule: 'A withdrawal exceeded 2.5 times the 30-day average, or there were at least two withdrawals this week and at least twice as many as the previous week.',
     starter: 'I noticed a change in recent cash withdrawals. Is anything different that would explain it?',
   },
   missed_bill: {
     title: 'Recurring bill missed or cancelled',
     pattern: 'Change in recurring bill payments',
     explanation: 'A bill that had been paid regularly appears overdue or cancelled. Check with the biller using a number from a previous statement or its official website to confirm the account status.',
+    rule: 'A bill paid for at least three consecutive months is still pending after its due date, or its latest payment was cancelled.',
     starter: 'I noticed this regular bill may not have gone through. Would you like help checking with the biller?',
   },
   income_interruption: {
     title: 'Expected income did not arrive',
     pattern: 'Change in recurring deposit',
     explanation: 'A recurring deposit appears to be missing or lower than its recent pattern. Confirm the payment schedule directly with the payer or bank through a trusted contact method.',
+    rule: 'A stable monthly deposit was missing more than five days after its expected date, or a deposit was at least 20% below the prior three-month average.',
     starter: 'I noticed a regular deposit may be different this month. Would you like to check on it together?',
   },
 }
 
 export function generateAlert(flag: PatternFlag): Alert {
   const details = ALERT_DETAILS[flag.type]
-  const evidence = flag.evidence.length ? ` Flagged activity: ${flag.evidence.join('; ')}.` : ''
   return {
     id: randomUUID(),
     type: flag.type,
     urgencyScore: Math.min(10, Math.max(1, Math.round(flag.confidence * 10))),
     title: details.title,
-    description: `${details.explanation}${evidence}`,
+    description: details.explanation,
+    ruleSummary: details.rule,
+    triggerEvidence: flag.evidence,
     rawData: flag.rawData,
     conversationStarter: details.starter,
     knownScamPattern: details.pattern,
@@ -110,6 +118,8 @@ export function generateTrusteeReport(alerts: Alert[], snapshot: AccountSnapshot
   const formatAlert = (alert: Alert) => {
     const lines = [
       `- **${alert.title}** (urgency ${alert.urgencyScore}/10; ${alert.status}; detected ${alert.createdAt}). ${alert.description}`,
+      alert.ruleSummary ? `  - Rule: ${alert.ruleSummary}` : '',
+      ...(alert.triggerEvidence ?? []).map((evidence) => `  - Trigger evidence: ${evidence}`),
       alert.notes ? `  - Note: ${alert.notes}` : '',
       alert.resolvedAt ? `  - Resolved: ${alert.resolvedAt}` : '',
       ...(alert.messages ?? []).map((message) => `  - ${message.role}: ${message.content}`),

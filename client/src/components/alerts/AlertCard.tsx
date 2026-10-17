@@ -24,7 +24,7 @@ export default function AlertCard({ alert, onOpen, onUpdate }: Props) {
       tabIndex={0}
       onClick={() => onOpen(alert.id)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpen(alert.id)}
-      className={`group cursor-pointer rounded-2xl border border-slate-200 border-l-4 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 ${tone.border}`}
+      className={`group cursor-pointer rounded-lg border border-slate-200 border-l-2 bg-white p-5 transition-colors hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 ${tone.border}`}
     >
       <div className="flex items-start gap-5">
         <div className="min-w-0 flex-1">

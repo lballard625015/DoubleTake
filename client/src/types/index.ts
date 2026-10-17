@@ -13,6 +13,8 @@ export interface Alert {
   urgencyScore: number // 1-10
   title: string
   description: string
+  ruleSummary?: string
+  triggerEvidence?: string[]
   rawData: object
   conversationStarter: string
   knownScamPattern?: string
@@ -34,6 +36,7 @@ export interface Transaction {
   type: 'purchase' | 'withdrawal' | 'transfer'
   amount: number
   merchant?: string
+  category?: string | string[]
   location?: { lat: number; lng: number }
   timestamp: string
   isNew?: boolean

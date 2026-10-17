@@ -19,8 +19,8 @@ To populate demo data, configure `NESSIE_API_KEY` in the root `.env`, then run `
 
 For a local, three-role demo, set `DEV_BYPASS_AUTH=true` in the root `.env` and `VITE_DEV_BYPASS=true` in `client/.env`. Start the server and client as described above, then run `npm run seed` from `server/` to populate the Nessie demo account and create the held-transfer example.
 
-1. Choose **Child**. The dashboard stays hidden while DoubleTake runs its initial account scan; after it completes, open an alert and send a neutral family check-in. The Community area includes general safety warnings and scam reports stored only in this browser; reports are unverified and are not shared with other users.
-2. Switch roles from the top banner, choose **Parent**, and respond that the activity is recognized or ask for help reviewing it.
+1. Choose **Child**. The dashboard stays hidden while DoubleTake runs its initial account scan; after it completes, open an alert to review the rule and evidence that triggered it, then send a neutral family check-in. Activity includes a category breakdown of recent purchases. The Community area provides scam warning guides and reports stored only in this browser; reports are unverified and are not shared with other users.
+2. Switch roles from the top banner, choose **Parent**, review purchase spending by category, and respond that the activity is recognized or ask for help reviewing it.
 3. Switch to **Trustee** to see the case overview, timeline, audit log, and printable report.
 
 The family plan, check-ins, and display preferences use this browser's local storage for the prototype; changes are shared only between roles in the same browser. The account holder can disable check-ins and hide the displayed balance. This data is not securely shared across devices or suitable for production. The local development auth bypass must never be enabled in production.

@@ -77,8 +77,15 @@ export default function TrusteeView() {
   const detail = (a: Alert) => (
     <div className="space-y-4 text-sm text-slate-700">
       <div>
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Rule-based explanation</p>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Why this was flagged</p>
         <p className="leading-relaxed">{a.description}</p>
+        <p className="mt-2 text-slate-600">{a.ruleSummary ?? 'This alert matched a monitoring rule using the available account history.'}</p>
+        {a.triggerEvidence && a.triggerEvidence.length > 0 && (
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-600">
+            {a.triggerEvidence.map((evidence, index) => <li key={`${index}-${evidence}`}>{evidence}</li>)}
+          </ul>
+        )}
+        <p className="mt-2 text-xs text-slate-500">A rule match is not a finding of fraud; it reflects only the activity available to this demo.</p>
         {a.knownScamPattern && (
           <p className="mt-1 text-slate-500">Resembles known pattern: {a.knownScamPattern}</p>
         )}

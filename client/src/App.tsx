@@ -70,18 +70,18 @@ function useStoredRole(key: string) {
 
 function RoleBar({ label, onSwitch, onLogout, demo = false }: { label: string; onSwitch: () => void; onLogout?: () => void; demo?: boolean }) {
   return (
-    <div className="flex min-h-10 items-center justify-between gap-3 bg-slate-900 px-4 py-2 text-xs text-slate-200">
+    <div className="role-bar flex min-h-10 items-center justify-between gap-3 bg-slate-900 px-4 py-2 text-xs text-slate-200">
       <span className="flex min-w-0 items-center gap-2">
         {demo && <span className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 font-semibold uppercase tracking-wider text-sky-900">Local demo</span>}
         <span className="truncate">{label}</span>
       </span>
       <span className="flex shrink-0 gap-4">
         <button className="font-medium text-white underline underline-offset-2" onClick={onSwitch}>
-          switch workspace
+          Switch workspace
         </button>
         {onLogout && (
           <button className="font-medium text-white underline underline-offset-2" onClick={onLogout}>
-            log out
+            Log out
           </button>
         )}
       </span>

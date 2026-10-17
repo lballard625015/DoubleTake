@@ -77,3 +77,13 @@ export interface FamilyCheckIn {
   status: 'awaiting' | 'recognized' | 'help_requested'
   respondedAt?: string
 }
+
+export interface FamilyPlan {
+  trustedContact: string
+  relationship: string
+  preferredCheckIn: 'in_person' | 'phone' | 'message'
+  shareCheckInNotifications: boolean
+  showBalance: boolean
+  agreedSteps: string[]
+  focusAreas: string[]
+}

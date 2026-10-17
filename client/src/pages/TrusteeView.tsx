@@ -5,6 +5,7 @@ import { config } from '@/config'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
+import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNessie } from '@/hooks/useNessie'
 import { RichText, STATUS_STYLE, timeAgo, TYPE_LABEL } from '@/lib/format'
@@ -18,7 +19,8 @@ const rowTint = (score: number) => (score >= 8 ? 'bg-red-50' : score >= 5 ? 'bg-
 export default function TrusteeView() {
   const { alerts, error } = useAlerts()
   const { holds, error: holdError } = useNessie()
-  const { checkIns } = useFamilyCheckIns()
+  const { checkIns, error: checkInError } = useFamilyCheckIns()
+  const { plan, error: planError, progress } = useFamilyPlan()
   const [tab, setTab] = useState('overview')
   const [generatedAt] = useState(() => new Date().toISOString())
   const [status, setStatus] = useState('all')
@@ -45,7 +47,8 @@ export default function TrusteeView() {
   const flagged = alerts.filter((a) => a.status === 'flagged').length
   const avg = total ? (alerts.reduce((s, a) => s + a.urgencyScore, 0) / total).toFixed(1) : '—'
   const active = alerts.filter((a) => a.status !== 'resolved')
-  const pendingCheckIns = checkIns.filter((checkIn) => checkIn.status === 'awaiting')
+  const visibleCheckIns = plan.shareCheckInNotifications ? checkIns : []
+  const pendingCheckIns = visibleCheckIns.filter((checkIn) => checkIn.status === 'awaiting')
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Home },
     { id: 'cases', label: 'Case log', icon: Bell, badge: active.length },
@@ -65,6 +68,7 @@ export default function TrusteeView() {
     ['Resolved', resolved],
     ['Flagged', flagged],
     ['Avg Urgency Score', avg],
+    ['Family Plan Ready', `${progress}%`],
   ]
 
   const detail = (a: Alert) => (
@@ -117,19 +121,20 @@ export default function TrusteeView() {
             </div>
           </div>
 
-          {(error || holdError) && (
+          {(error || holdError || checkInError || planError) && (
             <div role="alert" className="mx-auto mb-5 max-w-7xl rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              {error ?? holdError}
+              {error ?? holdError ?? checkInError ?? planError}
             </div>
           )}
 
           {tab === 'overview' && (
             <section className="mx-auto max-w-7xl space-y-5">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 {[
                   { label: 'Active cases', value: active.length, icon: Bell },
                   { label: 'Awaiting review', value: holds.filter((hold) => hold.status === 'held').length, icon: ClipboardCheck },
-                  { label: 'Family check-ins', value: checkIns.length, icon: Users },
+                  { label: 'Family check-ins', value: visibleCheckIns.length, icon: Users },
+                  { label: 'Family plan', value: `${progress}%`, icon: ClipboardCheck },
                   { label: 'Resolved', value: resolved, icon: ShieldCheck },
                 ].map(({ label, value, icon: Icon }) => (
                   <div key={label} className="rounded-xl border border-slate-700 bg-slate-900 p-5">
@@ -161,10 +166,12 @@ export default function TrusteeView() {
                     <div><h2 className="font-semibold text-white">Family response</h2><p className="text-xs text-slate-400">Check-ins are local demo data on this browser</p></div>
                     <button onClick={() => setTab('timeline')} className="text-sm text-sky-300 hover:underline">View timeline</button>
                   </div>
-                  {pendingCheckIns.length ? (
+                  {!plan.shareCheckInNotifications ? (
+                    <p className="mt-4 text-sm text-slate-400">Family check-ins are turned off by the account holder.</p>
+                  ) : pendingCheckIns.length ? (
                     <p className="mt-4 text-sm text-amber-200">{pendingCheckIns.length} check-in{pendingCheckIns.length === 1 ? '' : 's'} awaiting a response.</p>
                   ) : (
-                    <p className="mt-4 text-sm text-slate-400">{checkIns.length ? 'The family check-in has a response.' : 'No family check-ins recorded.'}</p>
+                    <p className="mt-4 text-sm text-slate-400">{visibleCheckIns.length ? 'The family check-in has a response.' : 'No family check-ins recorded.'}</p>
                   )}
                   <p className="mt-3 text-xs text-slate-500">Responses indicate that a conversation happened; they do not verify an account transaction.</p>
                 </div>
@@ -187,7 +194,7 @@ export default function TrusteeView() {
                     detail: `${TYPE_LABEL[alert.type]} · urgency ${alert.urgencyScore}/10 · ${STATUS_STYLE[alert.status].label}`,
                     icon: Bell,
                   })),
-                  ...checkIns.map((checkIn) => ({
+                  ...visibleCheckIns.map((checkIn) => ({
                     id: `checkin-${checkIn.id}`,
                     date: checkIn.respondedAt ?? checkIn.createdAt,
                     title: checkIn.status === 'awaiting' ? 'Family check-in sent' : checkIn.status === 'recognized' ? 'Family member recognized activity' : 'Family member asked for help',
@@ -286,7 +293,7 @@ export default function TrusteeView() {
           </div>
         )}
 
-        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
           {stats.map(([label, value]) => (
             <div key={label} className="rounded-xl border border-slate-200 bg-white p-5">
               <p className="text-sm text-slate-500">{label}</p>

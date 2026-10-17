@@ -23,4 +23,4 @@ For a local, three-role demo, set `DEV_BYPASS_AUTH=true` in the root `.env` and 
 2. Switch roles from the top banner, choose **Parent**, and respond that the activity is recognized or ask for help reviewing it.
 3. Switch to **Trustee** to see the case overview, timeline, audit log, and printable report.
 
-Family check-ins and parent display preferences use this browser's local storage for the prototype; they are not securely shared or suitable for production. The local development auth bypass must never be enabled in production.
+The family plan, check-ins, and display preferences use this browser's local storage for the prototype; changes are shared only between roles in the same browser. The account holder can disable check-ins and hide the displayed balance. This data is not securely shared across devices or suitable for production. The local development auth bypass must never be enabled in production.

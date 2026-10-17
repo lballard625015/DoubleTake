@@ -1,6 +1,20 @@
-// Adult child's dashboard: held-transfer banners, alerts feed with AI chat, activity history, and settings.
+// Family safety workspace: rule-based alerts, account activity, shared plan, and preferences.
 import { useEffect, useState } from 'react'
-import { Activity, Bell, ClipboardList, Home, MessageCircleHeart, Settings, ShieldCheck, Users } from 'lucide-react'
+import {
+  Activity,
+  Bell,
+  Check,
+  CheckCircle2,
+  ClipboardList,
+  ContactRound,
+  Home,
+  MessageCircleHeart,
+  Phone,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
 import AlertFeed from '@/components/alerts/AlertFeed'
@@ -9,6 +23,7 @@ import TransactionHold from '@/components/transaction/TransactionHold'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNessie } from '@/hooks/useNessie'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
+import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { config } from '@/config'
 import { api, errorMessage } from '@/lib/api'
 import { money, STATUS_STYLE, TONE, timeAgo, urgencyTone } from '@/lib/format'
@@ -19,16 +34,31 @@ const dateLabel = (iso: string) => new Date(iso).toLocaleString('en-US', { month
 export default function ChildView() {
   const { alerts, scanning, error, refresh, scan, update, sendMessage } = useAlerts()
   const { holds, error: holdError, resolveHold } = useNessie()
-  const { checkIns, requestCheckIn } = useFamilyCheckIns()
+  const { checkIns, error: checkInError, requestCheckIn } = useFamilyCheckIns()
+  const { plan, error: planError, updatePlan, toggleStep, toggleFocusArea, progress } = useFamilyPlan()
   const [tab, setTab] = useState('overview')
   const [openId, setOpenId] = useState<string | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [activityError, setActivityError] = useState<string | null>(null)
   const [greeting] = useState(() => new Date().getHours() < 12 ? 'morning' : 'afternoon')
+  const [copied, setCopied] = useState(false)
+  const [accountIdPreference, setAccountIdPreference] = useState(() => {
+    try {
+      return { show: localStorage.getItem('safeharbor:show-account-id') === 'true', error: null as string | null }
+    } catch (error) {
+      return { show: false, error: errorMessage(error, 'Could not read this display preference.') }
+    }
+  })
 
   const activeCount = alerts.filter((a) => a.status !== 'resolved').length
   const openAlert = alerts.find((a) => a.id === openId) ?? null
-  const shownError = error ?? holdError ?? activityError
+  const showAccountId = accountIdPreference.show
+  const visibleCheckIns = plan.shareCheckInNotifications ? checkIns : []
+  const shownError = error ?? holdError ?? activityError ?? planError ?? checkInError ?? accountIdPreference.error
+
+  const sendCheckInRequest = (alertId: string) => {
+    if (plan.shareCheckInNotifications) requestCheckIn(alertId)
+  }
 
   useEffect(() => {
     if (!config.accountId) return
@@ -42,12 +72,12 @@ export default function ChildView() {
     { id: 'overview', label: 'Overview', icon: Home },
     { id: 'alerts', label: 'Alerts', icon: Bell, badge: activeCount },
     { id: 'activity', label: 'Activity', icon: Activity },
-    { id: 'family', label: 'Family plan', icon: Users, badge: checkIns.filter((item) => item.status === 'awaiting').length },
+    { id: 'family', label: 'Family plan', icon: Users, badge: visibleCheckIns.filter((item) => item.status === 'awaiting').length },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100">
+    <div className="safeharbor-shell flex min-h-screen flex-col text-slate-100">
       {holds.map((h) => (
         <TransactionHold
           key={h.holdId}
@@ -80,7 +110,7 @@ export default function ChildView() {
                 {[
                   { label: 'Needs attention', value: activeCount, icon: Bell, color: 'text-amber-300' },
                   { label: 'Transfers on hold', value: holds.filter((hold) => hold.status === 'held').length, icon: ShieldCheck, color: 'text-sky-300' },
-                  { label: 'Family check-ins', value: checkIns.length, icon: MessageCircleHeart, color: 'text-emerald-300' },
+                  { label: 'Family check-ins', value: visibleCheckIns.length, icon: MessageCircleHeart, color: 'text-emerald-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="rounded-xl border border-slate-700 bg-slate-900 p-5">
                     <div className="flex items-center justify-between text-sm text-slate-400">
@@ -91,6 +121,14 @@ export default function ChildView() {
                   </div>
                 ))}
               </div>
+              <button onClick={() => setTab('family')} className="flex w-full items-center gap-4 rounded-xl border border-sky-300/15 bg-gradient-to-r from-sky-500/10 to-indigo-500/5 p-4 text-left transition hover:border-sky-300/30">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-400/10 text-sky-200"><Users className="size-5" /></div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-white">Family plan readiness</span><span className="text-sm font-semibold text-sky-200">{progress}%</span></div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-sky-300 transition-[width]" style={{ width: `${progress}%` }} /></div>
+                  <p className="mt-1 text-xs text-slate-400">{plan.agreedSteps.length} of 3 safety conversations discussed · Review together</p>
+                </div>
+              </button>
               {holds.some((hold) => hold.status === 'held') && (
                 <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-5">
                   <p className="font-semibold text-amber-200">A transfer is paused for your review</p>
@@ -138,9 +176,11 @@ export default function ChildView() {
                     </div>
                     <button onClick={() => setTab('family')} className="text-sm text-sky-300 hover:underline">Open plan</button>
                   </div>
-                  {checkIns.length ? (
+                  {!plan.shareCheckInNotifications ? (
+                    <p className="text-sm text-slate-400">Family check-ins are turned off in Settings. You can still talk together using the family plan.</p>
+                  ) : visibleCheckIns.length ? (
                     <p className="text-sm text-slate-300">
-                      {checkIns.filter((item) => item.status === 'awaiting').length
+                      {visibleCheckIns.filter((item) => item.status === 'awaiting').length
                         ? 'A check-in is waiting for a response.'
                         : 'Your latest check-in has a response.'}
                     </p>
@@ -203,57 +243,246 @@ export default function ChildView() {
 
           {tab === 'family' && (
             <section className="space-y-5">
-              <div>
-                <h1 className="text-2xl font-semibold text-white">Family safety plan</h1>
-                <p className="mt-1 text-sm text-slate-400">A check-in starts a conversation without sharing alert details. Check-ins are stored locally for this demo.</p>
-              </div>
-              <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-5 text-sm text-sky-100">
-                <h2 className="font-semibold">A thoughtful way to check in</h2>
-                <p className="mt-1 text-sky-100/80">Ask whether a transaction is familiar, listen without blame, and verify with the bank using a trusted number if needed.</p>
-              </div>
-              {checkIns.length ? (
-                <ul className="space-y-3">
-                  {checkIns.map((checkIn) => (
-                    <li key={checkIn.id} className="rounded-xl border border-slate-700 bg-slate-900 p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium text-white">{checkIn.message}</p>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                          checkIn.status === 'awaiting' ? 'bg-amber-400/10 text-amber-200' :
-                            checkIn.status === 'recognized' ? 'bg-emerald-400/10 text-emerald-200' : 'bg-sky-400/10 text-sky-200'
-                        }`}>
-                          {checkIn.status === 'awaiting' ? 'Awaiting response' : checkIn.status === 'recognized' ? 'Recognized' : 'Asked for help'}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-xs text-slate-400">Sent {dateLabel(checkIn.createdAt)}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="rounded-xl border border-dashed border-slate-600 p-8 text-center">
-                  <MessageCircleHeart className="mx-auto size-8 text-slate-500" />
-                  <p className="mt-3 font-medium text-slate-200">No check-ins yet</p>
-                  <p className="mt-1 text-sm text-slate-400">Open an alert and choose “Send Check-in” to invite the account holder to review activity.</p>
+              <div className="relative overflow-hidden rounded-2xl border border-sky-300/15 bg-gradient-to-br from-sky-500/15 via-slate-900 to-indigo-500/10 p-6 md:p-8">
+                <div className="pointer-events-none absolute -right-12 -top-20 size-64 rounded-full bg-sky-400/10 blur-3xl" />
+                <div className="relative flex flex-wrap items-start justify-between gap-5">
+                  <div className="max-w-xl">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-xs font-medium text-sky-200">
+                      <Sparkles className="size-3.5" /> Built together, never behind their back
+                    </div>
+                    <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Your family safety plan</h1>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                      Agree on how to check in, what to watch for, and what to do next. The account holder stays in control at every step.
+                    </p>
+                  </div>
+                  <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-sky-300/20 bg-slate-950/40">
+                    <span className="text-2xl font-semibold text-white">{progress}%</span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400">prepared</span>
+                  </div>
                 </div>
-              )}
+                <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-slate-800">
+                  <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-300 transition-[width]" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="relative mt-2 text-xs text-slate-400">
+                  {progress === 100 ? 'You have talked through all three steps.' : `${plan.agreedSteps.length} of 3 family steps talked through`}
+                </p>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5 md:p-6">
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><ContactRound className="size-5" /></div>
+                      <div>
+                        <h2 className="font-semibold text-white">Your trusted contact</h2>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-400">Keep this in sync with the person you have agreed can help. Use a name only—do not store phone numbers or account details here.</p>
+                      </div>
+                    </div>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <label className="text-xs font-medium text-slate-400">
+                        Contact name
+                        <input
+                          value={plan.trustedContact}
+                          maxLength={80}
+                          onChange={(event) => updatePlan({ trustedContact: event.target.value })}
+                          className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
+                        />
+                      </label>
+                      <label className="text-xs font-medium text-slate-400">
+                        Relationship
+                        <input
+                          value={plan.relationship}
+                          maxLength={60}
+                          onChange={(event) => updatePlan({ relationship: event.target.value })}
+                          className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
+                        />
+                      </label>
+                    </div>
+                    <label className="mt-4 block text-xs font-medium text-slate-400">
+                      Best way to check in
+                      <select
+                        value={plan.preferredCheckIn}
+                        onChange={(event) => updatePlan({ preferredCheckIn: event.target.value as typeof plan.preferredCheckIn })}
+                        className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-sky-400 sm:max-w-xs"
+                      >
+                        <option value="in_person">Talk together in person</option>
+                        <option value="phone">Call me</option>
+                        <option value="message">Send a neutral message first</option>
+                      </select>
+                    </label>
+                    <p className="mt-3 text-xs text-slate-500">Preferences save on this browser for the demo. This is not a secure shared family account.</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5 md:p-6">
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-200"><CheckCircle2 className="size-5" /></div>
+                      <div>
+                        <h2 className="font-semibold text-white">Three steps, agreed together</h2>
+                        <p className="mt-1 text-xs text-slate-400">Check off a step after you have talked it through—checking a box does not verify identity or contact information.</p>
+                      </div>
+                    </div>
+                    <div className="mt-5 space-y-2">
+                      {[
+                        { id: 'verify-contact', title: 'Choose a trusted way to verify a request', text: 'If a surprising call or message asks for money, pause and contact family using a number you already know.' },
+                        { id: 'pause-and-review', title: 'Agree to pause before sending money', text: 'No shame, no rush: take a moment to review a new recipient or unexpected request together.' },
+                        { id: 'call-the-bank', title: 'Know how to reach the bank safely', text: 'Use the phone number on the bank card or statement—not a link or number sent in a message.' },
+                      ].map((step) => {
+                        const done = plan.agreedSteps.includes(step.id)
+                        return (
+                          <button
+                            key={step.id}
+                            type="button"
+                            aria-pressed={done}
+                            onClick={() => toggleStep(step.id)}
+                            className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${
+                              done ? 'border-emerald-400/25 bg-emerald-400/[0.07]' : 'border-slate-700 bg-slate-950/50 hover:border-slate-600'
+                            }`}
+                          >
+                            <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border ${done ? 'border-emerald-300 bg-emerald-300 text-slate-950' : 'border-slate-600'}`}>
+                              {done && <Check className="size-3.5" />}
+                            </span>
+                            <span>
+                              <span className="block text-sm font-medium text-white">{step.title}</span>
+                              <span className="mt-1 block text-xs leading-relaxed text-slate-400">{step.text}</span>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5 md:p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-amber-400/10 text-amber-200"><ShieldCheck className="size-5" /></div>
+                      <div><h2 className="font-semibold text-white">What matters to your family?</h2><p className="text-xs text-slate-400">Choose topics to review together</p></div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {[
+                        { id: 'unfamiliar-transfers', label: 'New recipients and transfer requests' },
+                        { id: 'gift-cards', label: 'Gift cards and urgent payment requests' },
+                        { id: 'cash-withdrawals', label: 'Unusual cash withdrawal patterns' },
+                        { id: 'recurring-bills', label: 'Recurring bills and expected deposits' },
+                      ].map((topic) => {
+                        const selected = plan.focusAreas.includes(topic.id)
+                        return (
+                          <label key={topic.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm text-slate-300 hover:bg-slate-800">
+                            <input type="checkbox" checked={selected} onChange={() => toggleFocusArea(topic.id)} className="size-4 accent-sky-400" />
+                            {topic.label}
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">Preferences guide family conversations. The app’s monitoring rules are not customized by these choices.</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-sky-300/20 bg-gradient-to-br from-sky-500/10 to-slate-900 p-5 md:p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-sky-400/10 text-sky-200"><MessageCircleHeart className="size-5" /></div>
+                      <div><h2 className="font-semibold text-white">Start gently</h2><p className="text-xs text-slate-400">No alert details in the first message</p></div>
+                    </div>
+                    <blockquote className="mt-4 rounded-xl border border-white/5 bg-slate-950/60 p-4 text-sm leading-relaxed text-slate-200">
+                      “I’m doing my regular check-in. Would you like to look at anything together? There’s no rush.”
+                    </blockquote>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard.writeText('I’m doing my regular check-in. Would you like to look at anything together? There’s no rush.')
+                          .then(() => setCopied(true))
+                          .catch((clipboardError: unknown) => setActivityError(errorMessage(clipboardError, 'Could not copy the check-in message.')))
+                      }}
+                      className="mt-3 w-full rounded-lg border border-slate-600 px-3 py-2.5 text-sm font-medium text-slate-200 transition hover:border-sky-300/50 hover:bg-sky-300/5"
+                    >
+                      {copied ? 'Copied to clipboard' : 'Copy check-in message'}
+                    </button>
+                    <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-slate-400"><Phone className="mt-0.5 size-3.5 shrink-0" /> If a transaction may be unauthorized, contact the bank using the number on the card or statement.</p>
+                  </div>
+
+                  {visibleCheckIns.length > 0 && (
+                    <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5">
+                      <h2 className="font-semibold text-white">Recent check-ins</h2>
+                      <ul className="mt-3 space-y-3">
+                        {visibleCheckIns.slice(0, 3).map((checkIn) => (
+                          <li key={checkIn.id} className="flex items-start gap-3">
+                            <span className={`mt-1.5 size-2 rounded-full ${checkIn.status === 'awaiting' ? 'bg-amber-300' : 'bg-emerald-300'}`} />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm text-slate-200">{checkIn.status === 'awaiting' ? 'Waiting for a response' : checkIn.status === 'recognized' ? 'Activity recognized' : 'Help requested'}</p>
+                              <p className="text-xs text-slate-500">{dateLabel(checkIn.respondedAt ?? checkIn.createdAt)}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {visibleCheckIns.length ? (
+                <p className="sr-only" aria-live="polite">{visibleCheckIns.length} family check-ins recorded.</p>
+              ) : <p className="sr-only">No family check-ins yet.</p>}
             </section>
           )}
 
           {tab === 'settings' && (
             <section>
-              <h1 className="mb-5 text-2xl font-semibold text-white">Settings</h1>
-              <p className="mb-4 text-sm text-slate-400">Demo configuration is read-only here. Update local `.env` files to change linked account and monitoring location.</p>
-              <dl className="divide-y divide-slate-700 rounded-xl border border-slate-700 bg-slate-900 text-sm text-slate-100">
-                {[
-                  ['Protected person', config.protectedName],
-                  ['Account ID', config.accountId || 'Not configured (set VITE_NESSIE_ACCOUNT_ID)'],
-                  ['Home location', `${config.homeLocation.lat}, ${config.homeLocation.lng}`],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between px-5 py-3.5">
-                    <dt className="text-slate-400">{k}</dt>
-                    <dd className="font-medium">{v}</dd>
+              <div className="mb-5">
+                <p className="text-sm font-medium text-sky-300">Your controls</p>
+                <h1 className="mt-1 text-3xl font-semibold text-white">Settings & privacy</h1>
+                <p className="mt-1 text-sm text-slate-400">Choose how the demo appears and what it keeps on this device.</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-900">
+                  <div className="border-b border-slate-700 p-5"><h2 className="font-semibold text-white">Family communication</h2><p className="mt-1 text-xs text-slate-400">Your contact’s preferences are saved locally.</p></div>
+                  <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-sky-400/10 text-sky-200"><Users className="size-5" /></span>
+                    <span className="flex-1"><span className="block text-sm font-medium text-white">Allow family check-in requests</span><span className="text-xs text-slate-400">Share neutral requests with the parent screen in this demo</span></span>
+                    <input type="checkbox" checked={plan.shareCheckInNotifications} onChange={(event) => updatePlan({ shareCheckInNotifications: event.target.checked })} className="size-4 accent-sky-400" />
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-200"><ShieldCheck className="size-5" /></span>
+                    <span className="flex-1"><span className="block text-sm font-medium text-white">Show account balance</span><span className="text-xs text-slate-400">Hide the balance when you prefer more screen privacy</span></span>
+                    <input type="checkbox" checked={plan.showBalance} onChange={(event) => updatePlan({ showBalance: event.target.checked })} className="size-4 accent-sky-400" />
+                  </label>
+                  <div className="p-5"><p className="text-xs uppercase tracking-wider text-slate-500">Preferred check-in</p><p className="mt-2 text-sm text-slate-200">{plan.preferredCheckIn === 'in_person' ? 'Talk together in person' : plan.preferredCheckIn === 'phone' ? 'Call me' : 'Send a neutral message first'}</p><button onClick={() => setTab('family')} className="mt-3 text-sm font-medium text-sky-300 hover:underline">Review family plan</button></div>
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-900">
+                  <div className="border-b border-slate-700 p-5"><h2 className="font-semibold text-white">Privacy & device</h2><p className="mt-1 text-xs text-slate-400">This prototype stores demo preferences in this browser.</p></div>
+                  <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><ShieldCheck className="size-5" /></span>
+                    <span className="flex-1"><span className="block text-sm font-medium text-white">Show linked account ID</span><span className="text-xs text-slate-400">Hide it on the settings screen when sharing your display</span></span>
+                    <input
+                      type="checkbox"
+                      checked={showAccountId}
+                      onChange={(event) => {
+                        try {
+                          localStorage.setItem('safeharbor:show-account-id', String(event.target.checked))
+                          setAccountIdPreference({ show: event.target.checked, error: null })
+                        } catch (preferenceError) {
+                          setAccountIdPreference((current) => ({
+                            ...current,
+                            error: errorMessage(preferenceError, 'Could not save this display preference.'),
+                          }))
+                        }
+                      }}
+                      className="size-4 accent-sky-400"
+                    />
+                  </label>
+                  <div className="p-5">
+                    <p className="text-sm font-medium text-white">Connected monitoring setup</p>
+                    <p className="mt-1 text-xs text-slate-400">These values are set in local environment configuration.</p>
+                    <dl className="mt-3 space-y-2 text-xs">
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Account</dt><dd className="max-w-[65%] truncate text-right text-slate-300">{showAccountId ? config.accountId || 'Not configured' : 'Hidden'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Monitoring area</dt><dd className="text-right text-slate-300">{config.homeLocation.lat.toFixed(3)}, {config.homeLocation.lng.toFixed(3)}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Explanation engine</dt><dd className="text-right text-slate-300">On-device rules · no AI API</dd></div>
+                    </dl>
                   </div>
-                ))}
-              </dl>
+                </div>
+              </div>
+              <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-5">
+                <h2 className="font-semibold text-amber-100">Prototype privacy note</h2>
+                <p className="mt-1 text-sm leading-relaxed text-amber-100/70">Family plan details and check-ins live in this browser’s local storage. Do not enter sensitive personal data. They are not securely shared across devices or accounts.</p>
+              </div>
             </section>
           )}
         </main>
@@ -263,8 +492,9 @@ export default function ChildView() {
         onClose={() => setOpenId(null)}
         onUpdate={update}
         onSend={sendMessage}
-        onRequestCheckIn={requestCheckIn}
-        checkInSent={checkIns.some((checkIn) => checkIn.alertId === openAlert?.id && checkIn.status === 'awaiting')}
+        onRequestCheckIn={sendCheckInRequest}
+        checkInAllowed={plan.shareCheckInNotifications}
+        checkInSent={visibleCheckIns.some((checkIn) => checkIn.alertId === openAlert?.id && checkIn.status === 'awaiting')}
       />
     </div>
   )

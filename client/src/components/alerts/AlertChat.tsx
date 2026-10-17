@@ -12,9 +12,10 @@ interface Props {
   onSend: (id: string, message: string) => Promise<unknown>
   onRequestCheckIn: (alertId: string) => void
   checkInSent: boolean
+  checkInAllowed: boolean
 }
 
-export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestCheckIn, checkInSent }: Props) {
+export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestCheckIn, checkInSent, checkInAllowed }: Props) {
   const [input, setInput] = useState('')
   const [pending, setPending] = useState<ChatMessage | null>(null)
   const [sending, setSending] = useState(false)
@@ -221,11 +222,11 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onRequestCheckIn(alert.id)}
-                  disabled={checkInSent}
+                  disabled={checkInSent || !checkInAllowed}
                   className="flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 disabled:cursor-default disabled:bg-sky-50 disabled:opacity-70"
                 >
                   {checkInSent ? <Check className="size-4" /> : <MessageCircleHeart className="size-4" />}
-                  {checkInSent ? 'Check-in Sent' : 'Send Check-in'}
+                  {checkInSent ? 'Check-in Sent' : checkInAllowed ? 'Send Check-in' : 'Check-ins Off'}
                 </button>
                 <button
                   onClick={() => void act({ status: 'resolved' })}

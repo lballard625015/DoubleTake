@@ -2,6 +2,7 @@
 // DEMO SHORTCUT: users without an Auth0 role pick one after login, stored in localStorage (not secure; replace with server-set roles).
 import { useAuth0 } from '@auth0/auth0-react'
 import { useState } from 'react'
+import { ArrowRight, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { setApiRole } from './lib/api'
 import ChildView from './pages/ChildView'
@@ -29,15 +30,27 @@ function RoleView({ role }: { role: UserRole }) {
 
 function RolePicker({ message, onPick }: { message: string; onPick: (role: UserRole) => void }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <p className="text-sm text-gray-500">{message}</p>
-      <div className="flex gap-2">
-        {ROLES.map((r) => (
-          <Button key={r} className="capitalize" onClick={() => onPick(r)}>
-            {r}
-          </Button>
-        ))}
-      </div>
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-12 text-slate-900">
+      <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/5 sm:p-10">
+        <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-800 text-white">
+          <ShieldCheck className="size-6" />
+        </div>
+        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">SafeHarbor</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Choose your workspace</h1>
+        <p className="mt-3 text-base leading-7 text-slate-600">{message}</p>
+        <div className="mt-7 grid gap-2">
+          {ROLES.map((r) => (
+            <Button
+              key={r}
+              className="h-12 justify-between rounded-xl bg-slate-900 px-4 text-left capitalize text-white hover:bg-slate-800"
+              onClick={() => onPick(r)}
+            >
+              {r}
+              <ArrowRight className="size-4" />
+            </Button>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }
@@ -55,16 +68,19 @@ function useStoredRole(key: string) {
   return [role, choose] as const
 }
 
-function RoleBar({ label, onSwitch, onLogout }: { label: string; onSwitch: () => void; onLogout?: () => void }) {
+function RoleBar({ label, onSwitch, onLogout, demo = false }: { label: string; onSwitch: () => void; onLogout?: () => void; demo?: boolean }) {
   return (
-    <div className="flex items-center justify-between bg-yellow-100 px-4 py-1 text-xs">
-      <span>{label}</span>
-      <span className="flex gap-3">
-        <button className="underline" onClick={onSwitch}>
-          switch role
+    <div className="flex min-h-10 items-center justify-between gap-3 bg-slate-900 px-4 py-2 text-xs text-slate-200">
+      <span className="flex min-w-0 items-center gap-2">
+        {demo && <span className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 font-semibold uppercase tracking-wider text-sky-900">Local demo</span>}
+        <span className="truncate">{label}</span>
+      </span>
+      <span className="flex shrink-0 gap-4">
+        <button className="font-medium text-white underline underline-offset-2" onClick={onSwitch}>
+          switch workspace
         </button>
         {onLogout && (
-          <button className="underline" onClick={onLogout}>
+          <button className="font-medium text-white underline underline-offset-2" onClick={onLogout}>
             log out
           </button>
         )}
@@ -78,7 +94,7 @@ function DevApp() {
   if (!role) return <RolePicker message="Dev mode: Auth0 bypassed. Choose a role." onPick={choose} />
   return (
     <>
-      <RoleBar label={`Dev bypass: ${role[0].toUpperCase()}${role.slice(1)}`} onSwitch={() => choose(null)} />
+      <RoleBar label={`Authentication bypassed · ${role[0].toUpperCase()}${role.slice(1)} workspace`} demo onSwitch={() => choose(null)} />
       <RoleView role={role} />
     </>
   )

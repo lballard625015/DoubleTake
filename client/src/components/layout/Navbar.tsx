@@ -10,7 +10,7 @@ export default function Navbar({ protectedName }: { protectedName?: string }) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-6 print:hidden">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600">
+        <div className="flex size-9 items-center justify-center rounded-lg bg-sky-800">
           <ShieldCheck className="size-5 text-white" />
         </div>
         <span className="text-lg font-semibold tracking-tight text-white">SafeHarbor</span>
@@ -18,11 +18,8 @@ export default function Navbar({ protectedName }: { protectedName?: string }) {
 
       <div className="flex items-center gap-4">
         {protectedName && (
-          <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-sm text-emerald-300">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
-            </span>
+          <div className="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3.5 py-1.5 text-sm text-sky-800">
+            <span className="relative inline-flex size-2 rounded-full bg-sky-700" />
             Protected: {protectedName}
           </div>
         )}

@@ -12,11 +12,11 @@ import {
   Phone,
   Settings,
   ShieldCheck,
-  Sparkles,
   Users,
 } from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
+import InitialScanGate from '@/components/layout/InitialScanGate'
 import AlertFeed from '@/components/alerts/AlertFeed'
 import AlertChat from '@/components/alerts/AlertChat'
 import TransactionHold from '@/components/transaction/TransactionHold'
@@ -32,7 +32,7 @@ import type { Transaction } from '@/types'
 const dateLabel = (iso: string) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 
 export default function ChildView() {
-  const { alerts, scanning, error, refresh, scan, update, sendMessage } = useAlerts()
+  const { alerts, scanning, initialScanComplete, error, refresh, scan, update, sendMessage } = useAlerts(true)
   const { holds, error: holdError, resolveHold } = useNessie()
   const { checkIns, error: checkInError, requestCheckIn } = useFamilyCheckIns()
   const { plan, error: planError, updatePlan, toggleStep, toggleFocusArea, progress } = useFamilyPlan()
@@ -76,6 +76,10 @@ export default function ChildView() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
+  if (!initialScanComplete) {
+    return <InitialScanGate scanning={scanning} error={error} onRetry={() => void scan()} />
+  }
+
   return (
     <div className="safeharbor-shell flex min-h-screen flex-col text-slate-100">
       {holds.map((h) => (
@@ -92,7 +96,7 @@ export default function ChildView() {
       <Navbar protectedName={config.protectedName} />
       <div className="flex flex-1">
         <Sidebar items={items} active={tab} onSelect={setTab} />
-        <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 p-6 md:p-10">
           {shownError && (
             <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
               {shownError}
@@ -108,9 +112,9 @@ export default function ChildView() {
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
-                  { label: 'Needs attention', value: activeCount, icon: Bell, color: 'text-amber-300' },
+                  { label: 'Needs attention', value: activeCount, icon: Bell, color: 'text-sky-700' },
                   { label: 'Transfers on hold', value: holds.filter((hold) => hold.status === 'held').length, icon: ShieldCheck, color: 'text-sky-300' },
-                  { label: 'Family check-ins', value: visibleCheckIns.length, icon: MessageCircleHeart, color: 'text-emerald-300' },
+                  { label: 'Family check-ins', value: visibleCheckIns.length, icon: MessageCircleHeart, color: 'text-sky-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="rounded-xl border border-slate-700 bg-slate-900 p-5">
                     <div className="flex items-center justify-between text-sm text-slate-400">
@@ -121,7 +125,7 @@ export default function ChildView() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => setTab('family')} className="flex w-full items-center gap-4 rounded-xl border border-sky-300/15 bg-gradient-to-r from-sky-500/10 to-indigo-500/5 p-4 text-left transition hover:border-sky-300/30">
+              <button onClick={() => setTab('family')} className="flex w-full items-center gap-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-400/10 text-sky-200"><Users className="size-5" /></div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-white">Family plan readiness</span><span className="text-sm font-semibold text-sky-200">{progress}%</span></div>
@@ -243,27 +247,26 @@ export default function ChildView() {
 
           {tab === 'family' && (
             <section className="space-y-5">
-              <div className="relative overflow-hidden rounded-2xl border border-sky-300/15 bg-gradient-to-br from-sky-500/15 via-slate-900 to-indigo-500/10 p-6 md:p-8">
-                <div className="pointer-events-none absolute -right-12 -top-20 size-64 rounded-full bg-sky-400/10 blur-3xl" />
+              <div className="relative overflow-hidden rounded-2xl border border-sky-200 bg-white p-6 shadow-sm md:p-8">
                 <div className="relative flex flex-wrap items-start justify-between gap-5">
                   <div className="max-w-xl">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-xs font-medium text-sky-200">
-                      <Sparkles className="size-3.5" /> Built together, never behind their back
+                    <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800">
+                      <ShieldCheck className="size-3.5" /> Optional, shared family choices
                     </div>
                     <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Your family safety plan</h1>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    <p className="mt-2 text-base leading-relaxed text-slate-600">
                       Agree on how to check in, what to watch for, and what to do next. The account holder stays in control at every step.
                     </p>
                   </div>
-                  <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-sky-300/20 bg-slate-950/40">
-                    <span className="text-2xl font-semibold text-white">{progress}%</span>
+                  <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-sky-100 bg-sky-50">
+                    <span className="text-2xl font-semibold text-sky-900">{progress}%</span>
                     <span className="text-[10px] uppercase tracking-wider text-slate-400">prepared</span>
                   </div>
                 </div>
-                <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-slate-800">
-                  <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-300 transition-[width]" style={{ width: `${progress}%` }} />
+                <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-sky-600 transition-[width]" style={{ width: `${progress}%` }} />
                 </div>
-                <p className="relative mt-2 text-xs text-slate-400">
+                <p className="relative mt-2 text-sm text-slate-500">
                   {progress === 100 ? 'You have talked through all three steps.' : `${plan.agreedSteps.length} of 3 family steps talked through`}
                 </p>
               </div>
@@ -272,7 +275,7 @@ export default function ChildView() {
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5 md:p-6">
                     <div className="flex items-start gap-3">
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><ContactRound className="size-5" /></div>
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ContactRound className="size-5" /></div>
                       <div>
                         <h2 className="font-semibold text-white">Your trusted contact</h2>
                         <p className="mt-1 text-xs leading-relaxed text-slate-400">Keep this in sync with the person you have agreed can help. Use a name only—do not store phone numbers or account details here.</p>
@@ -315,7 +318,7 @@ export default function ChildView() {
 
                   <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5 md:p-6">
                     <div className="flex items-start gap-3">
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-200"><CheckCircle2 className="size-5" /></div>
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><CheckCircle2 className="size-5" /></div>
                       <div>
                         <h2 className="font-semibold text-white">Three steps, agreed together</h2>
                         <p className="mt-1 text-xs text-slate-400">Check off a step after you have talked it through—checking a box does not verify identity or contact information.</p>
@@ -335,10 +338,10 @@ export default function ChildView() {
                             aria-pressed={done}
                             onClick={() => toggleStep(step.id)}
                             className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${
-                              done ? 'border-emerald-400/25 bg-emerald-400/[0.07]' : 'border-slate-700 bg-slate-950/50 hover:border-slate-600'
+                              done ? 'border-sky-200 bg-sky-50' : 'border-slate-700 bg-slate-950/50 hover:border-sky-300'
                             }`}
                           >
-                            <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border ${done ? 'border-emerald-300 bg-emerald-300 text-slate-950' : 'border-slate-600'}`}>
+                            <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border ${done ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-600'}`}>
                               {done && <Check className="size-3.5" />}
                             </span>
                             <span>
@@ -355,7 +358,7 @@ export default function ChildView() {
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-slate-700 bg-slate-900 p-5 md:p-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-xl bg-amber-400/10 text-amber-200"><ShieldCheck className="size-5" /></div>
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ShieldCheck className="size-5" /></div>
                       <div><h2 className="font-semibold text-white">What matters to your family?</h2><p className="text-xs text-slate-400">Choose topics to review together</p></div>
                     </div>
                     <div className="mt-4 space-y-2">
@@ -377,7 +380,7 @@ export default function ChildView() {
                     <p className="mt-3 text-xs text-slate-500">Preferences guide family conversations. The app’s monitoring rules are not customized by these choices.</p>
                   </div>
 
-                  <div className="rounded-2xl border border-sky-300/20 bg-gradient-to-br from-sky-500/10 to-slate-900 p-5 md:p-6">
+                  <div className="rounded-2xl border border-sky-200 bg-white p-5 shadow-sm md:p-6">
                     <div className="flex items-center gap-3">
                       <div className="flex size-10 items-center justify-center rounded-xl bg-sky-400/10 text-sky-200"><MessageCircleHeart className="size-5" /></div>
                       <div><h2 className="font-semibold text-white">Start gently</h2><p className="text-xs text-slate-400">No alert details in the first message</p></div>
@@ -405,7 +408,7 @@ export default function ChildView() {
                       <ul className="mt-3 space-y-3">
                         {visibleCheckIns.slice(0, 3).map((checkIn) => (
                           <li key={checkIn.id} className="flex items-start gap-3">
-                            <span className={`mt-1.5 size-2 rounded-full ${checkIn.status === 'awaiting' ? 'bg-amber-300' : 'bg-emerald-300'}`} />
+                            <span className={`mt-1.5 size-2 rounded-full ${checkIn.status === 'awaiting' ? 'bg-sky-600' : 'bg-slate-400'}`} />
                             <div className="min-w-0 flex-1">
                               <p className="text-sm text-slate-200">{checkIn.status === 'awaiting' ? 'Waiting for a response' : checkIn.status === 'recognized' ? 'Activity recognized' : 'Help requested'}</p>
                               <p className="text-xs text-slate-500">{dateLabel(checkIn.respondedAt ?? checkIn.createdAt)}</p>
@@ -440,7 +443,7 @@ export default function ChildView() {
                     <input type="checkbox" checked={plan.shareCheckInNotifications} onChange={(event) => updatePlan({ shareCheckInNotifications: event.target.checked })} className="size-4 accent-sky-400" />
                   </label>
                   <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-200"><ShieldCheck className="size-5" /></span>
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ShieldCheck className="size-5" /></span>
                     <span className="flex-1"><span className="block text-sm font-medium text-white">Show account balance</span><span className="text-xs text-slate-400">Hide the balance when you prefer more screen privacy</span></span>
                     <input type="checkbox" checked={plan.showBalance} onChange={(event) => updatePlan({ showBalance: event.target.checked })} className="size-4 accent-sky-400" />
                   </label>
@@ -449,7 +452,7 @@ export default function ChildView() {
                 <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-900">
                   <div className="border-b border-slate-700 p-5"><h2 className="font-semibold text-white">Privacy & device</h2><p className="mt-1 text-xs text-slate-400">This prototype stores demo preferences in this browser.</p></div>
                   <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><ShieldCheck className="size-5" /></span>
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ShieldCheck className="size-5" /></span>
                     <span className="flex-1"><span className="block text-sm font-medium text-white">Show linked account ID</span><span className="text-xs text-slate-400">Hide it on the settings screen when sharing your display</span></span>
                     <input
                       type="checkbox"

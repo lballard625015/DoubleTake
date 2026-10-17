@@ -230,7 +230,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                 </button>
                 <button
                   onClick={() => void act({ status: 'resolved' })}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-sky-800 py-2 text-sm font-medium text-white hover:bg-sky-900"
                 >
                   <Check className="size-4" /> Mark Resolved
                 </button>

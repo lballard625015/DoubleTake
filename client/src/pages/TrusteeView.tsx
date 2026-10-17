@@ -4,6 +4,7 @@ import { Activity, Bell, ChevronDown, ChevronRight, ClipboardCheck, FileText, Ho
 import { config } from '@/config'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
+import InitialScanGate from '@/components/layout/InitialScanGate'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -17,7 +18,7 @@ const fmt = (iso?: string) =>
 const rowTint = (score: number) => (score >= 8 ? 'bg-red-50' : score >= 5 ? 'bg-amber-50' : 'bg-white')
 
 export default function TrusteeView() {
-  const { alerts, error } = useAlerts()
+  const { alerts, scanning, initialScanComplete, error, scan } = useAlerts(true)
   const { holds, error: holdError } = useNessie()
   const { checkIns, error: checkInError } = useFamilyCheckIns()
   const { plan, error: planError, progress } = useFamilyPlan()
@@ -105,8 +106,12 @@ export default function TrusteeView() {
 
   const select = 'rounded-md border border-slate-300 bg-white px-3 py-2 text-sm'
 
+  if (!initialScanComplete) {
+    return <InitialScanGate scanning={scanning} error={error ?? holdError ?? checkInError ?? planError} onRetry={() => void scan()} />
+  }
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100 print:bg-white">
+    <div className="safeharbor-shell flex min-h-screen flex-col text-slate-100 print:bg-white">
       <Navbar protectedName={config.protectedName} />
       <div className="flex flex-1">
         <Sidebar items={navItems} active={tab} onSelect={setTab} />

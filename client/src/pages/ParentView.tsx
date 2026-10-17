@@ -1,6 +1,6 @@
 // Parent's home screen: calm, standard-banking view of balance and recent transactions. Never shows alerts or suspicion indicators.
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, Check, CircleHelp, History, Landmark, ShieldCheck, SlidersHorizontal, Users, UserRoundCheck, Sparkles, Eye, HeartHandshake } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Check, CircleHelp, History, Landmark, ShieldCheck, SlidersHorizontal, Users, UserRoundCheck, Eye, HeartHandshake } from 'lucide-react'
 import { config } from '@/config'
 import SectionTabs from '@/components/layout/SectionTabs'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
@@ -102,7 +102,7 @@ export default function ParentView() {
 
         {tab === 'home' && (
           <>
-            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#075985] via-[#0369a1] to-[#1d4ed8] p-7 text-white shadow-xl shadow-sky-950/10 md:p-9">
+            <section className="relative overflow-hidden rounded-3xl bg-sky-900 p-7 text-white shadow-xl shadow-sky-950/10 md:p-9">
               <div className="pointer-events-none absolute -right-12 -top-20 size-72 rounded-full bg-white/10 blur-3xl" />
               <div className="relative flex flex-wrap items-start justify-between gap-6">
                 <div>
@@ -132,7 +132,7 @@ export default function ParentView() {
               </div>
             </section>
             <button onClick={() => setTab('family')} className="flex w-full items-center gap-4 rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700"><HeartHandshake className="size-5" /></span>
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><HeartHandshake className="size-5" /></span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold text-slate-900">Your family safety plan</span>
                 <span className="mt-0.5 block text-sm text-slate-500">{plan.agreedSteps.length} of 3 family conversations talked through · {plan.trustedContact}</span>
@@ -151,7 +151,7 @@ export default function ParentView() {
                         <p className="text-sm text-slate-700">{checkIn.message}</p>
                         <p className="mt-1 text-xs text-slate-500">{timeAgo(checkIn.createdAt)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
-                          <button onClick={() => respondToCheckIn(checkIn.id, 'recognized')} className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800">
+                          <button onClick={() => respondToCheckIn(checkIn.id, 'recognized')} className="flex items-center gap-2 rounded-lg bg-sky-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-900">
                             <Check className="size-4" /> I recognize it
                           </button>
                           <button onClick={() => respondToCheckIn(checkIn.id, 'help_requested')} className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100">
@@ -166,12 +166,12 @@ export default function ParentView() {
               </section>
             )}
             {plan.shareCheckInNotifications && pendingCheckIns.length === 0 && checkIns.length > 0 && (
-              <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-                <h2 className="font-semibold text-emerald-950">Your recent family check-in</h2>
-                <p className="mt-1 text-sm text-emerald-900">
+              <section className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+                <h2 className="font-semibold text-sky-950">Your recent family check-in</h2>
+                <p className="mt-1 text-sm text-sky-900">
                   {checkIns[0].status === 'recognized' ? 'You let your family member know you recognized the activity.' : 'You asked your family member to review the activity with you.'}
                 </p>
-                <p className="mt-1 text-xs text-emerald-800">{timeAgo(checkIns[0].respondedAt ?? checkIns[0].createdAt)}</p>
+                <p className="mt-1 text-xs text-sky-800">{timeAgo(checkIns[0].respondedAt ?? checkIns[0].createdAt)}</p>
               </section>
             )}
             <section className="rounded-2xl bg-white p-2 shadow-sm">
@@ -246,11 +246,10 @@ export default function ParentView() {
 
         {tab === 'family' && (
           <section className="space-y-5">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-sky-950 p-7 text-white shadow-lg">
-              <div className="pointer-events-none absolute -right-10 -top-14 size-52 rounded-full bg-sky-400/15 blur-3xl" />
+            <div className="relative overflow-hidden rounded-2xl bg-sky-950 p-7 text-white shadow-lg">
               <div className="relative flex flex-wrap items-center justify-between gap-6">
                 <div className="max-w-xl">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-sky-100"><Sparkles className="size-3.5" /> Your choices come first</span>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-sky-100"><ShieldCheck className="size-3.5" /> Your choices come first</span>
                   <h1 className="mt-4 text-3xl font-semibold">A plan that feels right to you</h1>
                   <p className="mt-2 text-sm leading-relaxed text-slate-300">You decide who can check in, how you prefer to talk, and which safety steps work for your family. You can change these choices any time.</p>
                 </div>
@@ -259,7 +258,7 @@ export default function ParentView() {
                   <span className="text-[10px] uppercase tracking-wider text-slate-400">talked through</span>
                 </div>
               </div>
-              <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-sky-300 to-emerald-300 transition-[width]" style={{ width: `${progress}%` }} /></div>
+              <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-sky-300 transition-[width]" style={{ width: `${progress}%` }} /></div>
               <p className="relative mt-2 text-xs text-slate-400">{plan.agreedSteps.length} of 3 optional conversations marked complete</p>
             </div>
 
@@ -286,7 +285,7 @@ export default function ParentView() {
                 </div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex items-start gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><ShieldCheck className="size-5" /></span><div><h2 className="font-semibold">A few simple agreements</h2><p className="text-sm text-slate-500">Mark a conversation complete only after you have discussed it together.</p></div></div>
+                <div className="flex items-start gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ShieldCheck className="size-5" /></span><div><h2 className="font-semibold">A few simple agreements</h2><p className="text-sm text-slate-500">Mark a conversation complete only after you have discussed it together.</p></div></div>
                 <div className="mt-5 space-y-2">
                   {[
                     ['verify-contact', 'Verify surprising requests', 'Pause and call a family member using a number you already know.'],
@@ -295,8 +294,8 @@ export default function ParentView() {
                   ].map(([id, title, text]) => {
                     const complete = plan.agreedSteps.includes(id)
                     return (
-                      <button key={id} type="button" aria-pressed={complete} onClick={() => toggleStep(id)} className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${complete ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-sky-200 hover:bg-sky-50/50'}`}>
-                        <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${complete ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300'}`}>{complete && <Check className="size-3.5" />}</span>
+                      <button key={id} type="button" aria-pressed={complete} onClick={() => toggleStep(id)} className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${complete ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:border-sky-200 hover:bg-sky-50/50'}`}>
+                        <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${complete ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-300'}`}>{complete && <Check className="size-3.5" />}</span>
                         <span><span className="block text-sm font-medium text-slate-900">{title}</span><span className="mt-1 block text-xs leading-relaxed text-slate-500">{text}</span></span>
                       </button>
                     )
@@ -321,7 +320,7 @@ export default function ParentView() {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Users className="size-5" /></span>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><Users className="size-5" /></span>
                 <div className="flex-1">
                   <h2 className="font-semibold">How your family checks in</h2>
                   <p className="mt-1 text-sm text-slate-500">Choose the way that works best for you. This preference is shared with the family-plan demo on this browser.</p>

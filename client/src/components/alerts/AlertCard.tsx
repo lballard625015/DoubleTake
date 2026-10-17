@@ -24,7 +24,7 @@ export default function AlertCard({ alert, onOpen, onUpdate }: Props) {
       tabIndex={0}
       onClick={() => onOpen(alert.id)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpen(alert.id)}
-      className={`group cursor-pointer rounded-xl border-l-4 bg-white p-5 shadow-sm transition hover:shadow-lg hover:shadow-black/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${tone.border}`}
+      className={`group cursor-pointer rounded-2xl border border-slate-200 border-l-4 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 ${tone.border}`}
     >
       <div className="flex items-start gap-5">
         <div className="min-w-0 flex-1">
@@ -33,9 +33,9 @@ export default function AlertCard({ alert, onOpen, onUpdate }: Props) {
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.cls}`}>{status.label}</span>
           </div>
           <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-slate-600">{alert.description}</p>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-400">{timeAgo(alert.createdAt)}</span>
-            <div className="flex gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm text-slate-500">{timeAgo(alert.createdAt)}</span>
+            <div className="flex flex-wrap gap-2 transition-opacity sm:opacity-70 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
               {alert.status === 'pending' && (
                 <button
                   onClick={(e) => quick(e, 'acknowledged')}
@@ -56,9 +56,9 @@ export default function AlertCard({ alert, onOpen, onUpdate }: Props) {
           </div>
         </div>
 
-        <div className="flex w-16 shrink-0 flex-col items-center">
-          <span className={`text-5xl font-bold leading-none tabular-nums ${tone.text}`}>{alert.urgencyScore}</span>
-          <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Urgency</span>
+        <div className="flex w-14 shrink-0 flex-col items-center rounded-xl bg-slate-50 px-2 py-2">
+          <span className={`text-3xl font-semibold leading-none tabular-nums ${tone.text}`}>{alert.urgencyScore}</span>
+          <span className="mt-1 text-xs font-medium text-slate-500">of 10</span>
         </div>
       </div>
     </div>

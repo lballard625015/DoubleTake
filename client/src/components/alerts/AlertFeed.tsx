@@ -17,39 +17,37 @@ export default function AlertFeed({ alerts, scanning, onScan, onOpen, onUpdate }
 
   return (
     <section>
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Alerts</h1>
-          <p className="mt-0.5 text-sm text-slate-400">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-sky-700">Account activity review</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">Alerts & activity</h1>
+          <p className="mt-1 text-base text-slate-400">
             {active.length ? `${active.length} need${active.length === 1 ? 's' : ''} your attention` : 'Nothing needs your attention'}
           </p>
         </div>
         <button
           onClick={onScan}
           disabled={scanning}
-          className="flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-400 disabled:opacity-60"
+          className="flex min-h-11 items-center gap-2 rounded-xl bg-sky-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-900 disabled:cursor-wait disabled:opacity-60"
         >
           {scanning ? <Loader2 className="size-4 animate-spin" /> : <ScanSearch className="size-4" />}
-          Run Scan
+          {scanning ? 'Scanning…' : 'Scan again'}
         </button>
       </div>
 
       {scanning && (
-        <div className="mb-4 overflow-hidden rounded-xl border border-sky-500/30 bg-sky-500/10 px-5 py-4">
-          <p className="animate-pulse text-sm font-medium text-sky-200">Analyzing account activity...</p>
-          <div className="mt-3 h-1 overflow-hidden rounded-full bg-sky-500/20">
-            <div className="h-full w-1/3 animate-[slide_1.4s_ease-in-out_infinite] rounded-full bg-sky-400" />
-          </div>
-        </div>
+        <p role="status" className="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-900">
+          Reviewing recent account activity…
+        </p>
       )}
 
-      {active.length === 0 && !scanning ? (
-        <div className="flex items-center gap-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6">
-          <CheckCircle2 className="size-9 shrink-0 text-emerald-400" />
+      {active.length === 0 ? (
+        <div className="flex items-start gap-4 rounded-2xl border border-sky-200 bg-sky-50 p-6">
+          <CheckCircle2 className="mt-0.5 size-7 shrink-0 text-sky-700" />
           <div>
-            <p className="text-lg font-semibold text-emerald-300">All Clear</p>
-            <p className="text-sm text-emerald-200/80">
-              No suspicious activity detected. {config.protectedFirstName}&apos;s account looks normal.
+            <p className="text-lg font-semibold text-sky-950">No alerts from this scan</p>
+            <p className="mt-1 text-sm leading-6 text-sky-900">
+              {config.protectedFirstName}&apos;s recent activity did not match the current alert rules. Keep checking activity as usual.
             </p>
           </div>
         </div>

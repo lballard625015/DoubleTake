@@ -1,6 +1,6 @@
 // Trustee workspace: case overview, family timeline, audit log, and printable report.
 import { Fragment, useMemo, useState } from 'react'
-import { Activity, Bell, ChevronDown, ChevronRight, ClipboardCheck, FileText, Home, Printer, ShieldCheck, Users } from 'lucide-react'
+import { Activity, Bell, ChevronDown, ChevronRight, ClipboardCheck, FileText, Home, MessagesSquare, Printer, ShieldCheck, Users } from 'lucide-react'
 import { config } from '@/config'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
@@ -9,6 +9,7 @@ import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNessie } from '@/hooks/useNessie'
+import CommunityView from '@/pages/CommunityView'
 import { RichText, STATUS_STYLE, timeAgo, TYPE_LABEL } from '@/lib/format'
 import type { Alert } from '@/types'
 
@@ -55,6 +56,7 @@ export default function TrusteeView() {
     { id: 'cases', label: 'Case log', icon: Bell, badge: active.length },
     { id: 'timeline', label: 'Family timeline', icon: Activity },
     { id: 'reports', label: 'Reports', icon: FileText },
+    { id: 'community', label: 'Community', icon: MessagesSquare },
   ]
 
   const toggle = (id: string) =>
@@ -89,7 +91,7 @@ export default function TrusteeView() {
             {a.messages.map((m, i) => (
               <li key={i} className="rounded-lg border border-slate-200 bg-white p-3">
                 <p className="mb-0.5 text-xs text-slate-400">
-                  {m.role === 'user' ? 'Family member' : 'SafeHarbor assistant'} · {fmt(m.timestamp)}
+                  {m.role === 'user' ? 'Family member' : 'DoubleTake assistant'} · {fmt(m.timestamp)}
                 </p>
                 <p className="whitespace-pre-wrap">
                   <RichText text={m.content} />
@@ -116,15 +118,17 @@ export default function TrusteeView() {
       <div className="flex flex-1">
         <Sidebar items={navItems} active={tab} onSelect={setTab} />
         <main className="min-w-0 flex-1 p-5 md:p-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-6">
-              <p className="text-sm font-medium text-sky-300">Trustee workspace</p>
-              <h1 className="mt-1 text-3xl font-semibold text-white">
-                {tab === 'overview' ? `${config.protectedName}'s case overview` : tab === 'cases' ? 'Case log' : tab === 'timeline' ? 'Family timeline' : 'Trustee report'}
-              </h1>
-              <p className="mt-1 text-sm text-slate-400">Review documented activity and family responses. Rule-based alerts are indicators, not findings.</p>
+          {tab !== 'community' && (
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-6">
+                <p className="text-sm font-medium text-sky-300">Trustee workspace</p>
+                <h1 className="mt-1 text-3xl font-semibold text-white">
+                  {tab === 'overview' ? `${config.protectedName}'s case overview` : tab === 'cases' ? 'Case log' : tab === 'timeline' ? 'Family timeline' : 'Trustee report'}
+                </h1>
+                <p className="mt-1 text-sm text-slate-400">Review documented activity and family responses. Rule-based alerts are indicators, not findings.</p>
+              </div>
             </div>
-          </div>
+          )}
 
           {(error || holdError || checkInError || planError) && (
             <div role="alert" className="mx-auto mb-5 max-w-7xl rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
@@ -235,7 +239,7 @@ export default function TrusteeView() {
             <section className="mx-auto max-w-4xl rounded-2xl bg-white p-7 text-slate-900 shadow-sm print:max-w-none print:p-0 print:shadow-none">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-wider text-sky-700">SafeHarbor · Trustee report</p>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-sky-700">DoubleTake · Trustee report</p>
                   <h2 className="mt-2 text-2xl font-semibold">{config.protectedName}</h2>
                   <p className="mt-1 text-sm text-slate-500">Prepared {fmt(generatedAt)}</p>
                 </div>
@@ -270,6 +274,8 @@ export default function TrusteeView() {
               <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">Generated from available alerts. This prototype does not independently verify transactions or provide legal or financial advice.</p>
             </section>
           )}
+
+          {tab === 'community' && <CommunityView />}
 
           {tab === 'cases' && (
             <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white">

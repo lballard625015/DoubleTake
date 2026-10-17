@@ -1,4 +1,4 @@
-// Top navigation bar: SafeHarbor logo, "Protected" indicator for the monitored person, and the signed-in user's avatar.
+// Top navigation bar: DoubleTake logo, "Protected" indicator for the monitored person, and the signed-in user's avatar.
 import { useAuth0 } from '@auth0/auth0-react'
 import { ShieldCheck } from 'lucide-react'
 
@@ -13,7 +13,7 @@ export default function Navbar({ protectedName }: { protectedName?: string }) {
         <div className="flex size-9 items-center justify-center rounded-lg bg-sky-800">
           <ShieldCheck className="size-5 text-white" />
         </div>
-        <span className="text-lg font-semibold tracking-tight text-white">SafeHarbor</span>
+        <span className="text-lg font-semibold tracking-tight text-white">DoubleTake</span>
       </div>
 
       <div className="flex items-center gap-4">

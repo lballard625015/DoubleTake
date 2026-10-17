@@ -1,4 +1,4 @@
-// Shared TypeScript types for SafeHarbor: alerts, chat messages, transactions, Nessie accounts and pattern flags.
+// Shared TypeScript types for DoubleTake: alerts, chat messages, transactions, Nessie accounts and pattern flags.
 
 export interface Alert {
   id: string

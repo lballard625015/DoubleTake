@@ -220,7 +220,7 @@ async function main() {
   await bill('Medicare Supplement', 148, due.getDate(), due, 'pending')
   // Event 5: no Social Security deposit this month (nothing to create)
 
-  // Event 3: the $3,200 transfer to a brand-new payee is held by SafeHarbor, never sent to Nessie.
+  // Event 3: the $3,200 transfer to a brand-new payee is held by DoubleTake, never sent to Nessie.
   const michael = await post('/customers', {
     first_name: 'Michael',
     last_name: 'Thompson',

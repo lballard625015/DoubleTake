@@ -35,7 +35,7 @@ function RolePicker({ message, onPick }: { message: string; onPick: (role: UserR
         <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-800 text-white">
           <ShieldCheck className="size-6" />
         </div>
-        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">SafeHarbor</p>
+        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">DoubleTake</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Choose your workspace</h1>
         <p className="mt-3 text-base leading-7 text-slate-600">{message}</p>
         <div className="mt-7 grid gap-2">
@@ -110,7 +110,7 @@ function AuthApp() {
   const claimRole = user?.['https://safeharbor.app/role']
   if (isRole(claimRole)) return <RoleView role={claimRole} />
 
-  if (!picked) return <RolePicker message="Welcome to SafeHarbor. Choose your role to continue." onPick={choose} />
+  if (!picked) return <RolePicker message="Welcome to DoubleTake. Choose your role to continue." onPick={choose} />
   return (
     <>
       <RoleBar

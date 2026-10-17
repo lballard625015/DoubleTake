@@ -1,4 +1,4 @@
-// Axios client for the SafeHarbor server. Attaches the Auth0 token when available and, in dev, the dev-bypass role headers.
+// Axios client for the DoubleTake server. Attaches the Auth0 token when available and, in dev, the dev-bypass role headers.
 import axios from 'axios'
 import { config } from '@/config'
 import type { UserRole } from '@/types'

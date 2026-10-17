@@ -11,7 +11,7 @@ export default function Login() {
         <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-800 text-white">
           <ShieldCheck className="size-6" />
         </div>
-        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">SafeHarbor</p>
+        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">DoubleTake</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">A safer way to stay in the loop.</h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
           Sign in to review account activity and manage family check-ins on your terms.

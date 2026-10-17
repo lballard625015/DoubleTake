@@ -79,7 +79,7 @@ export default function ParentView() {
             <Landmark className="size-5 text-white" />
           </div>
           <div>
-            <span className="text-lg font-semibold">My SafeHarbor</span>
+            <span className="text-lg font-semibold">My DoubleTake</span>
             <p className="text-xs text-slate-500">Private, simple account protection</p>
           </div>
         </div>
@@ -347,7 +347,7 @@ export default function ParentView() {
               </dl>
             </div>
             <p className="rounded-xl bg-sky-50 p-4 text-sm leading-relaxed text-sky-950">
-              SafeHarbor is a prototype and does not control a real bank transfer. Contact your bank directly if you need to freeze a card, report fraud, or change account access.
+              DoubleTake is a prototype and does not control a real bank transfer. Contact your bank directly if you need to freeze a card, report fraud, or change account access.
             </p>
           </section>
         )}

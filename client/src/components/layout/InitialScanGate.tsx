@@ -14,7 +14,7 @@ export default function InitialScanGate({ scanning, error, onRetry }: Props) {
         <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
           {scanning ? <LoaderCircle className="size-6 animate-spin" /> : <ScanSearch className="size-6" />}
         </div>
-        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-700">SafeHarbor account check</p>
+        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-700">DoubleTake account check</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
           {scanning ? 'Checking recent activity' : 'Your first scan is needed'}
         </h1>

@@ -15,4 +15,4 @@ app.use('/api/nessie', nessieRouter)
 app.use('/api/alerts', alertsRouter)
 
 const port = Number(process.env.PORT ?? 4000)
-app.listen(port, () => console.log(`SafeHarbor server listening on :${port}`))
+app.listen(port, () => console.log(`DoubleTake server listening on :${port}`))

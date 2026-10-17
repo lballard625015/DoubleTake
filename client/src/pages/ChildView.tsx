@@ -9,6 +9,7 @@ import {
   ContactRound,
   Home,
   MessageCircleHeart,
+  MessagesSquare,
   Phone,
   Settings,
   ShieldCheck,
@@ -19,6 +20,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import InitialScanGate from '@/components/layout/InitialScanGate'
 import AlertFeed from '@/components/alerts/AlertFeed'
 import AlertChat from '@/components/alerts/AlertChat'
+import CommunityView from '@/pages/CommunityView'
 import TransactionHold from '@/components/transaction/TransactionHold'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNessie } from '@/hooks/useNessie'
@@ -73,6 +75,7 @@ export default function ChildView() {
     { id: 'alerts', label: 'Alerts', icon: Bell, badge: activeCount },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'family', label: 'Family plan', icon: Users, badge: visibleCheckIns.filter((item) => item.status === 'awaiting').length },
+    { id: 'community', label: 'Community', icon: MessagesSquare },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
@@ -488,6 +491,8 @@ export default function ChildView() {
               </div>
             </section>
           )}
+
+          {tab === 'community' && <CommunityView />}
         </main>
       </div>
       <AlertChat

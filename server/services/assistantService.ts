@@ -120,10 +120,10 @@ export function generateTrusteeReport(alerts: Alert[], snapshot: AccountSnapshot
   const totalAlerts = alerts.length
 
   return [
-    '# SafeHarbor Account Activity Report',
+    '# DoubleTake Account Activity Report',
     '',
     '## Executive Summary',
-    `SafeHarbor recorded ${totalAlerts} alert${totalAlerts === 1 ? '' : 's'}: ${active.length} active and ${resolved.length} resolved. The alert urgency score reflects a monitoring rule and is not a determination that fraud occurred.`,
+    `DoubleTake recorded ${totalAlerts} alert${totalAlerts === 1 ? '' : 's'}: ${active.length} active and ${resolved.length} resolved. The alert urgency score reflects a monitoring rule and is not a determination that fraud occurred.`,
     '',
     '## Active Alerts (ordered by urgency, highest first)',
     active.length ? active.map(formatAlert).join('\n') : 'No active alerts.',

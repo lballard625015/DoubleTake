@@ -246,20 +246,20 @@ export default function ParentView() {
 
         {tab === 'family' && (
           <section className="space-y-5">
-            <div className="relative overflow-hidden rounded-2xl bg-sky-950 p-7 text-white shadow-lg">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7">
               <div className="relative flex flex-wrap items-center justify-between gap-6">
                 <div className="max-w-xl">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-sky-100"><ShieldCheck className="size-3.5" /> Your choices come first</span>
-                  <h1 className="mt-4 text-3xl font-semibold">A plan that feels right to you</h1>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-300">You decide who can check in, how you prefer to talk, and which safety steps work for your family. You can change these choices any time.</p>
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-sky-800"><ShieldCheck className="size-4" /> Your choices come first</span>
+                  <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">A plan that feels right to you</h1>
+                  <p className="mt-2 text-base leading-relaxed text-slate-600">You decide who can check in, how you prefer to talk, and which safety steps work for your family. You can change these choices any time.</p>
                 </div>
-                <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-                  <span className="text-2xl font-semibold">{progress}%</span>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400">talked through</span>
+                <div className="flex size-20 flex-col items-center justify-center rounded-xl border border-slate-200 bg-[#f8fafc]">
+                  <span className="text-2xl font-semibold text-slate-950">{progress}%</span>
+                  <span className="text-xs text-slate-500">talked through</span>
                 </div>
               </div>
-              <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-sky-300 transition-[width]" style={{ width: `${progress}%` }} /></div>
-              <p className="relative mt-2 text-xs text-slate-400">{plan.agreedSteps.length} of 3 optional conversations marked complete</p>
+              <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-sky-700 transition-[width]" style={{ width: `${progress}%` }} /></div>
+              <p className="relative mt-2 text-sm text-slate-500">{plan.agreedSteps.length} of 3 optional conversations marked complete</p>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
@@ -294,7 +294,7 @@ export default function ParentView() {
                   ].map(([id, title, text]) => {
                     const complete = plan.agreedSteps.includes(id)
                     return (
-                      <button key={id} type="button" aria-pressed={complete} onClick={() => toggleStep(id)} className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${complete ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:border-sky-200 hover:bg-sky-50/50'}`}>
+                      <button key={id} type="button" aria-pressed={complete} onClick={() => toggleStep(id)} className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${complete ? 'border-sky-200 bg-sky-50' : 'border-slate-200 bg-[#f8fafc] hover:border-sky-200 hover:bg-sky-50'}`}>
                         <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${complete ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-300'}`}>{complete && <Check className="size-3.5" />}</span>
                         <span><span className="block text-sm font-medium text-slate-900">{title}</span><span className="mt-1 block text-xs leading-relaxed text-slate-500">{text}</span></span>
                       </button>

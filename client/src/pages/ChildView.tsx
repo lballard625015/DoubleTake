@@ -247,7 +247,7 @@ export default function ChildView() {
 
           {tab === 'family' && (
             <section className="space-y-5">
-              <div className="relative overflow-hidden rounded-2xl border border-sky-200 bg-white p-6 shadow-sm md:p-8">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
                 <div className="relative flex flex-wrap items-start justify-between gap-5">
                   <div className="max-w-xl">
                     <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800">
@@ -258,7 +258,7 @@ export default function ChildView() {
                       Agree on how to check in, what to watch for, and what to do next. The account holder stays in control at every step.
                     </p>
                   </div>
-                  <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-sky-100 bg-sky-50">
+                  <div className="flex size-20 flex-col items-center justify-center rounded-xl border border-slate-200 bg-[#f8fafc]">
                     <span className="text-2xl font-semibold text-sky-900">{progress}%</span>
                     <span className="text-[10px] uppercase tracking-wider text-slate-400">prepared</span>
                   </div>
@@ -338,7 +338,7 @@ export default function ChildView() {
                             aria-pressed={done}
                             onClick={() => toggleStep(step.id)}
                             className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${
-                              done ? 'border-sky-200 bg-sky-50' : 'border-slate-700 bg-slate-950/50 hover:border-sky-300'
+                              done ? 'border-sky-200 bg-sky-50' : 'border-slate-200 bg-[#f8fafc] hover:border-sky-300 hover:bg-sky-50'
                             }`}
                           >
                             <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border ${done ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-600'}`}>

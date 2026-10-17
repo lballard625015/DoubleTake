@@ -1,6 +1,6 @@
 // Slide-over panel: alert details, local rule-based guidance, and resolve/flag/note actions.
 import { useEffect, useRef, useState } from 'react'
-import { Check, Flag, Lightbulb, Loader2, MessageCircleHeart, NotebookPen, Send, ShieldCheck, X } from 'lucide-react'
+import { Check, Flag, Lightbulb, Loader2, Maximize2, MessageCircleHeart, Minimize2, NotebookPen, Send, ShieldCheck, X } from 'lucide-react'
 import { errorMessage } from '@/lib/api'
 import { RichText, STATUS_STYLE, TONE, TYPE_LABEL, timeAgo, urgencyTone } from '@/lib/format'
 import type { Alert, ChatMessage } from '@/types'
@@ -22,6 +22,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
   const [error, setError] = useState<string | null>(null)
   const [noting, setNoting] = useState(false)
   const [note, setNote] = useState('')
+  const [expanded, setExpanded] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const open = !!alert
   const alertId = alert?.id
@@ -32,6 +33,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
     setError(null)
     setNoting(false)
     setNote('')
+    setExpanded(false)
   }, [alertId])
 
   useEffect(() => {
@@ -88,13 +90,15 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
         className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}
       />
       <aside
-        className={`absolute right-0 top-0 flex h-full w-full max-w-xl flex-col bg-white shadow-2xl transition-transform duration-300 ${
+        className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl transition-[transform,max-width] duration-300 ${
+          expanded ? 'max-w-none' : 'max-w-xl'
+        } ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {alert && (
           <>
-            <div className="border-b border-slate-200 p-6">
+            <div className="shrink-0 max-h-[45vh] overflow-y-auto border-b border-slate-200 p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{TYPE_LABEL[alert.type]}</p>
@@ -106,64 +110,81 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                     <span>{timeAgo(alert.createdAt)}</span>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2">
                   <div className={`rounded-xl px-3 py-2 text-center ${tone.soft}`}>
                     <div className={`text-3xl font-bold leading-none ${tone.text}`}>{alert.urgencyScore}</div>
                     <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Urgency</div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setExpanded((value) => !value)}
+                    aria-label={expanded ? 'Collapse conversation panel' : 'Expand conversation panel'}
+                    aria-expanded={expanded}
+                    title={expanded ? 'Collapse panel' : 'Expand panel'}
+                    className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    {expanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+                  </button>
                   <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-slate-400 hover:bg-slate-100">
                     <X className="size-5" />
                   </button>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-relaxed text-slate-700">{alert.description}</p>
-              <section className="mt-4 border-y border-slate-200 py-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Why this was flagged</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                  {alert.ruleSummary ?? 'This alert matched a monitoring rule using the available account history.'}
-                </p>
-                {alert.triggerEvidence && alert.triggerEvidence.length > 0 && (
-                  <ul className="mt-3 space-y-2">
-                    {alert.triggerEvidence.map((evidence, index) => (
-                      <li key={`${index}-${evidence}`} className="flex gap-2 text-sm leading-relaxed text-slate-700">
-                        <span className="mt-2 size-1.5 shrink-0 bg-sky-700" />
-                        {evidence}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  This is a rule match, not a finding of fraud. The rule only reflects data available to this demo.
-                </p>
-              </section>
-              {alert.knownScamPattern && (
-                <p className="mt-2 text-xs text-slate-500">
-                  Resembles: <span className="font-medium text-slate-700">{alert.knownScamPattern}</span>
-                </p>
+              {!expanded && (
+                <>
+                  <p className="mt-4 text-sm leading-relaxed text-slate-700">{alert.description}</p>
+                  <details className="mt-4 border-y border-slate-200 py-3">
+                    <summary className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-950">
+                      Alert evidence and guidance
+                    </summary>
+                    <section className="pt-3">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Why this was flagged</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                        {alert.ruleSummary ?? 'This alert matched a monitoring rule using the available account history.'}
+                      </p>
+                      {alert.triggerEvidence && alert.triggerEvidence.length > 0 && (
+                        <ul className="mt-3 space-y-2">
+                          {alert.triggerEvidence.map((evidence, index) => (
+                            <li key={`${index}-${evidence}`} className="flex gap-2 text-sm leading-relaxed text-slate-700">
+                              <span className="mt-2 size-1.5 shrink-0 bg-sky-700" />
+                              {evidence}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                        This is a rule match, not a finding of fraud. The rule only reflects data available to this demo.
+                      </p>
+                      {alert.knownScamPattern && (
+                        <p className="mt-2 text-xs text-slate-500">
+                          Resembles: <span className="font-medium text-slate-700">{alert.knownScamPattern}</span>
+                        </p>
+                      )}
+                      {alert.notes && (
+                        <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                          <span className="font-semibold">Note:</span> {alert.notes}
+                        </p>
+                      )}
+                      <div className="mt-4 flex gap-3 border-l-2 border-sky-700 bg-[#f8fafc] p-4">
+                        <Lightbulb className="mt-0.5 size-5 shrink-0 text-yellow-600" />
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Suggested conversation starter</p>
+                          <p className="mt-1 text-sm leading-relaxed text-slate-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
+                          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                            A check-in shares a neutral request to review a transaction—not this alert or its details.
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+                  </details>
+                </>
               )}
-              {alert.notes && (
-                <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                  <span className="font-semibold">Note:</span> {alert.notes}
-                </p>
-              )}
-              <div className="mt-4 flex gap-3 border-l-2 border-sky-700 bg-[#f8fafc] p-4">
-                <Lightbulb className="mt-0.5 size-5 shrink-0 text-yellow-600" />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Suggested conversation starter</p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
-                  <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                    This guide uses fixed rules, not AI. A check-in shares a neutral request to review a transaction—not this alert or its details.
-                  </p>
-                </div>
-              </div>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-6">
-              {messages.length === 0 && (
-                <p className="text-center text-sm text-slate-400">
-                  This local guide uses fixed rules, not an AI model. Add context for general guidance; it cannot verify activity or automatically change the urgency score.
-                </p>
-              )}
+            <div role="log" aria-label="Alert guidance conversation" aria-live="polite" className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 p-6">
+              <p className="border border-sky-100 bg-white p-3 text-xs leading-relaxed text-slate-600">
+                <span className="font-semibold text-slate-800">About this guide:</span> Your question goes to DoubleTake’s server, not an AI model or another person. Replies use fixed rules and alert details; they cannot verify a transaction.
+              </p>
               {messages.map((m, i) => (
                 <div key={i} className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {m.role === 'assistant' && (
@@ -172,8 +193,8 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      m.role === 'user' ? 'rounded-br-sm bg-slate-900 text-white' : 'rounded-bl-sm border border-slate-200 bg-white text-slate-800'
+                    className={`max-w-[90%] min-w-0 break-words whitespace-pre-wrap rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
+                      m.role === 'user' ? 'rounded-br-sm bg-sky-800 text-white' : 'rounded-bl-sm border border-slate-200 bg-white text-slate-800'
                     }`}
                   >
                     <RichText text={m.content} />
@@ -195,7 +216,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
               <div ref={endRef} />
             </div>
 
-            <div className="border-t border-slate-200 bg-white p-4">
+            <div className="shrink-0 max-h-[45vh] overflow-y-auto border-t border-slate-200 bg-white p-4">
               {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
               {noting && (
                 <div className="mb-3">
@@ -227,6 +248,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask about this alert..."
+                  aria-label="Ask DoubleTake about this alert"
                   className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-sky-500 focus:outline-none"
                 />
                 <button

@@ -36,6 +36,9 @@ export function errorMessage(err: unknown, fallback = 'Something went wrong. Ple
     if (typeof serverMsg === 'string') return serverMsg
     if (err.response?.status === 401) return 'You are not signed in to the server.'
     if (err.response?.status === 403) return 'You do not have permission to do that.'
+    if (err.response && err.response.status >= 500) {
+      return `The server could not complete this request (HTTP ${err.response.status}). Please retry; if it continues, check the server logs.`
+    }
     if (!err.response) return 'Cannot reach the server. Is it running?'
   }
   return fallback

@@ -113,33 +113,32 @@ export default function ParentView() {
 
         {tab === 'home' && (
           <>
-            <section className="relative overflow-hidden rounded-3xl bg-sky-900 p-7 text-white shadow-xl shadow-sky-950/10 md:p-9">
-              <div className="pointer-events-none absolute -right-12 -top-20 size-72 rounded-full bg-white/10 blur-3xl" />
-              <div className="relative flex flex-wrap items-start justify-between gap-6">
+            <section className="overflow-hidden rounded-lg border border-slate-200 bg-white p-6 md:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-6">
                 <div>
-                  <div className="flex items-center gap-2 text-sm text-sky-100"><ShieldCheck className="size-4" /> Your account, your choices</div>
-                  <p className="mt-5 text-sm text-sky-100">{account?.nickname ?? 'Checking'} balance</p>
-                  <p className="mt-1 text-5xl font-semibold tracking-tight md:text-6xl">
+                  <div className="flex items-center gap-2 text-sm font-medium text-sky-800"><ShieldCheck className="size-4" /> Your account, your choices</div>
+                  <p className="mt-5 text-sm text-slate-600">{account?.nickname ?? 'Checking'} balance</p>
+                  <p className="mt-1 text-5xl font-semibold tracking-tight text-slate-950 md:text-6xl">
                     {!plan.showBalance ? '••••••' : account ? money(account.balance) : loaded ? '—' : '...'}
                   </p>
-                  <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-sky-100">
+                  <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-slate-600">
                     {account?.account_number && <span>Account ending in {account.account_number.slice(-4)}</span>}
-                    <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Monitoring with your permission</span>
+                    <span className="border border-slate-200 bg-slate-50 px-3 py-1">Monitoring with your permission</span>
                   </div>
                 </div>
                 <button
                   type="button"
                   aria-label={plan.showBalance ? 'Hide account balance' : 'Show account balance'}
                   onClick={() => updatePlan({ showBalance: !plan.showBalance })}
-                  className="relative flex size-11 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+                  className="relative flex size-11 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
                 >
                   <Eye className="size-5" />
                 </button>
               </div>
-              <div className="relative mt-7 grid gap-3 border-t border-white/15 pt-5 sm:grid-cols-3">
-                <div><p className="text-xs text-sky-100/70">Recent transactions</p><p className="mt-1 text-xl font-semibold">{txns.length}</p></div>
-                <div><p className="text-xs text-sky-100/70">Family plan</p><p className="mt-1 text-xl font-semibold">{progress}% ready</p></div>
-                <div><p className="text-xs text-sky-100/70">Check-ins waiting</p><p className="mt-1 text-xl font-semibold">{plan.shareCheckInNotifications ? pendingCheckIns.length : 'Off'}</p></div>
+              <div className="mt-7 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-3">
+                <div><p className="text-xs font-medium text-slate-500">Recent transactions</p><p className="mt-1 text-xl font-semibold text-slate-900">{txns.length}</p></div>
+                <div><p className="text-xs font-medium text-slate-500">Family plan</p><p className="mt-1 text-xl font-semibold text-slate-900">{progress}% ready</p></div>
+                <div><p className="text-xs font-medium text-slate-500">Check-ins waiting</p><p className="mt-1 text-xl font-semibold text-slate-900">{plan.shareCheckInNotifications ? pendingCheckIns.length : 'Off'}</p></div>
               </div>
             </section>
             <button onClick={() => setTab('family')} className="flex w-full items-center gap-4 rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md">

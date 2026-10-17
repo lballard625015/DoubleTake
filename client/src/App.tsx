@@ -31,8 +31,8 @@ function RoleView({ role }: { role: UserRole }) {
 function RolePicker({ message, onPick }: { message: string; onPick: (role: UserRole) => void }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-12 text-slate-900">
-      <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/5 sm:p-10">
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-800 text-white">
+      <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+        <div className="flex size-12 items-center justify-center rounded-md bg-sky-900 text-white">
           <ShieldCheck className="size-6" />
         </div>
         <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">DoubleTake</p>
@@ -42,7 +42,7 @@ function RolePicker({ message, onPick }: { message: string; onPick: (role: UserR
           {ROLES.map((r) => (
             <Button
               key={r}
-              className="h-12 justify-between rounded-xl bg-slate-900 px-4 text-left capitalize text-white hover:bg-slate-800"
+              className="h-12 justify-between rounded-md bg-slate-900 px-4 text-left capitalize text-white hover:bg-slate-800"
               onClick={() => onPick(r)}
             >
               {r}

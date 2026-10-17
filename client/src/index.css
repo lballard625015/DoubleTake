@@ -145,11 +145,11 @@
 }
 
 .safeharbor-shell .rounded-2xl,
-.parent-workspace .rounded-2xl { border-radius: 0.625rem; }
+.parent-workspace .rounded-2xl { border-radius: 0.375rem; }
 .safeharbor-shell .rounded-xl,
-.parent-workspace .rounded-xl { border-radius: 0.5rem; }
+.parent-workspace .rounded-xl { border-radius: 0.375rem; }
 .safeharbor-shell .rounded-lg,
-.parent-workspace .rounded-lg { border-radius: 0.375rem; }
+.parent-workspace .rounded-lg { border-radius: 0.25rem; }
 .safeharbor-shell .rounded-md,
 .parent-workspace .rounded-md { border-radius: 0.25rem; }
 
@@ -187,3 +187,19 @@
 .safeharbor-shell .border-slate-700 { border-color: #dbe3ec; }
 .safeharbor-shell .border-slate-600 { border-color: #c5d0dc; }
 .safeharbor-shell [class~="text-xs"] { font-size: 0.8125rem; line-height: 1.45; }
+
+body {
+  background: #f8fafc;
+  color: #172033;
+  font-feature-settings: "ss01" on;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #0369a1;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #dbeafe;
+  color: #0f172a;
+}

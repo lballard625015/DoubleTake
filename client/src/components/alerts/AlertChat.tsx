@@ -1,4 +1,4 @@
-// Slide-over panel: full alert details, conversation starter, Gemini chat, and resolve/flag/note actions.
+// Slide-over panel: alert details, local rule-based guidance, and resolve/flag/note actions.
 import { useEffect, useRef, useState } from 'react'
 import { Check, Flag, Lightbulb, Loader2, NotebookPen, Send, ShieldCheck, X } from 'lucide-react'
 import { errorMessage } from '@/lib/api'
@@ -136,7 +136,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend }: Props) {
             <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-6">
               {messages.length === 0 && (
                 <p className="text-center text-sm text-slate-400">
-                  Add context (e.g. &ldquo;She told me she was buying a gift&rdquo;) and the assistant will reassess.
+                  This local guide uses fixed rules, not an AI model. Add context for general guidance; it cannot verify activity or automatically change the urgency score.
                 </p>
               )}
               {messages.map((m, i) => (

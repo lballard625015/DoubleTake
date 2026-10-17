@@ -1,12 +1,11 @@
 // Routes for /api/alerts: list, scan an account for patterns, update status/notes, and chat about an alert.
 import { Router } from 'express'
 import { checkAuth, requireRole } from '../middleware/auth.js'
-import { continueAlertConversation } from '../services/geminiService.js'
+import { continueAlertConversation } from '../services/assistantService.js'
 import { getAccountSnapshot, NessieError } from '../services/nessieService.js'
 import { detectPatterns, type PatternFlag } from '../services/patternEngine.js'
 import { alertFromFlag, alerts, seenFingerprints } from '../store.js'
 
-const GEMINI_BATCH_SIZE = 10
 import type { Alert } from '../types.js'
 
 const router = Router()
@@ -49,8 +48,7 @@ router.post('/scan', requireRole('child', 'trustee'), async (req, res) => {
     throw err
   }
 
-  // One alert per pattern type: several rules can fire on the same event (e.g. a gift-card purchase at a pharmacy),
-  // and merging them keeps the alert list, and the number of Gemini calls, small.
+  // One alert per pattern type: several rules can fire on the same event (e.g. a gift-card purchase at a pharmacy).
   const merged = new Map<PatternFlag['type'], PatternFlag>()
   for (const flag of detectPatterns(snapshot, homeLocation)) {
     const prev = merged.get(flag.type)
@@ -74,12 +72,7 @@ router.post('/scan', requireRole('child', 'trustee'), async (req, res) => {
     return true
   })
 
-  // Gemini rate limit: at most GEMINI_BATCH_SIZE requests in flight, each batch finishing before the next starts.
-  const created: Alert[] = []
-  for (let i = 0; i < fresh.length; i += GEMINI_BATCH_SIZE) {
-    const batch = fresh.slice(i, i + GEMINI_BATCH_SIZE)
-    created.push(...(await Promise.all(batch.map((flag) => alertFromFlag(flag, snapshot)))))
-  }
+  const created: Alert[] = fresh.map(alertFromFlag)
   alerts.push(...created)
   res.json(created)
 })

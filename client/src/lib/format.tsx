@@ -41,7 +41,7 @@ export function timeAgo(iso: string, now = Date.now()): string {
 
 export const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
-// Renders **bold** segments from Gemini replies without pulling in a markdown library.
+// Renders **bold** segments in assistant replies without pulling in a markdown library.
 export function RichText({ text }: { text: string }) {
   return (
     <>

@@ -10,7 +10,6 @@ router.use(checkAuth)
 
 const ID_PATTERN = /^[\w-]{1,64}$/
 const HOLD_WINDOW_MS = 4 * 60 * 60 * 1000
-const emptySnapshot = { purchases: [], withdrawals: [], transfers: [], bills: [], deposits: [], merchants: [], fetchedAt: '' }
 
 router.get('/transfer/holds', requireRole('child', 'trustee'), (_req, res) => {
   res.json(pendingTransfers)
@@ -103,15 +102,12 @@ router.post('/transfer/hold', async (req, res) => {
 
   const holdId = randomUUID()
   const payee = String(transferData.payee_id ?? 'unknown payee')
-  const alert = await alertFromFlag(
-    {
-      type: 'large_transfer',
-      confidence: 0.9,
-      rawData: { holdId, accountId, transferData },
-      evidence: [`Transfer of $${amount.toFixed(2)} to ${payee} is being held for review`],
-    },
-    emptySnapshot,
-  )
+  const alert = alertFromFlag({
+    type: 'large_transfer',
+    confidence: 0.9,
+    rawData: { holdId, accountId, transferData },
+    evidence: [`Transfer of $${amount.toFixed(2)} to ${payee} is being held for review`],
+  })
   alerts.push(alert)
 
   const held = {

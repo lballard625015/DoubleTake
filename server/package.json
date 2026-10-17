@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --import tsx --test services/assistantService.test.ts",
     "dev": "tsx watch --env-file=../.env index.ts",
     "start": "tsx --env-file=../.env index.ts",
     "seed": "tsx --env-file=../.env seed.ts",
@@ -15,7 +15,6 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "axios": "^1.20.0",
     "cors": "^2.8.6",
     "express": "^5.3.0",

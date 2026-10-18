@@ -10,10 +10,7 @@ export default function Navbar({ protectedName }: { protectedName?: string }) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 print:hidden">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-9 items-center justify-center rounded-md bg-sky-900">
-          <ShieldCheck className="size-5 text-white" />
-        </div>
-        <span className="text-lg font-semibold tracking-tight text-slate-950">DoubleTake</span>
+        <img src="/doubletake-logo.png" alt="DoubleTake, a safer way to stay in the loop" className="h-auto w-20" />
       </div>
 
       <div className="flex items-center gap-4">
@@ -24,16 +21,13 @@ export default function Navbar({ protectedName }: { protectedName?: string }) {
             <span className="font-medium text-slate-900">{protectedName}</span>
           </div>
         )}
-        {user?.picture ? (
-          <img src={user.picture} alt={name} className="size-9 rounded-full ring-1 ring-slate-200" />
-        ) : (
-          <div
-            title={name}
-            className="flex size-9 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700 ring-1 ring-slate-200"
-          >
-            {initials}
-          </div>
-        )}
+        <div
+          title={name}
+          aria-label={`Signed in as ${name}`}
+          className="flex size-9 items-center justify-center rounded-full bg-sky-800 text-sm font-semibold text-white ring-1 ring-sky-900"
+        >
+          {initials}
+        </div>
       </div>
     </header>
   )

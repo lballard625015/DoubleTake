@@ -2,7 +2,7 @@
 // DEMO SHORTCUT: users without an Auth0 role pick one after login, stored in localStorage (not secure; replace with server-set roles).
 import { useAuth0 } from '@auth0/auth0-react'
 import { useState } from 'react'
-import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { setApiRole } from './lib/api'
 import ChildView from './pages/ChildView'
@@ -37,10 +37,7 @@ function RolePicker({ message, onPick }: { message: string; onPick: (role: UserR
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-12 text-slate-900">
       <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
-        <div className="flex size-12 items-center justify-center rounded-md bg-sky-900 text-white">
-          <ShieldCheck className="size-6" />
-        </div>
-        <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-sky-800">DoubleTake</p>
+        <img src="/doubletake-logo.png" alt="DoubleTake, a safer way to stay in the loop" className="mx-auto mb-5 h-auto w-56" />
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Choose your workspace</h1>
         <p className="mt-3 text-base leading-7 text-slate-600">{message}</p>
         <div className="mt-7 grid gap-2">

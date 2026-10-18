@@ -97,11 +97,8 @@ export default function ParentView() {
 
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center gap-2.5 px-6 py-5">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-sky-600">
-            <Landmark className="size-5 text-white" />
-          </div>
+          <img src="/doubletake-logo.png" alt="DoubleTake, a safer way to stay in the loop" className="h-auto w-20" />
           <div>
-            <span className="text-lg font-semibold">My DoubleTake</span>
             <p className="text-xs text-slate-500">Private, simple account protection</p>
           </div>
         </div>

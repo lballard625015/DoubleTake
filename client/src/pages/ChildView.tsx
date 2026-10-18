@@ -505,7 +505,7 @@ export default function ChildView() {
                   <div className="border-b border-slate-700 p-5"><h2 className="font-semibold text-white">Family communication</h2><p className="mt-1 text-xs text-slate-400">Your contact’s preferences are saved locally.</p></div>
                   <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">
                     <span className="flex size-10 items-center justify-center rounded-xl bg-sky-400/10 text-sky-200"><Users className="size-5" /></span>
-                    <span className="flex-1"><span className="block text-sm font-medium text-white">Allow family check-in requests</span><span className="text-xs text-slate-400">Share neutral requests with the parent screen in this demo</span></span>
+                    <span className="flex-1"><span className="block text-sm font-medium text-white">Allow family check-in requests</span><span className="text-xs text-slate-400">Share neutral requests with the account holder screen in this demo</span></span>
                     <input type="checkbox" checked={plan.shareCheckInNotifications} onChange={(event) => updatePlan({ shareCheckInNotifications: event.target.checked })} className="size-4 accent-sky-400" />
                   </label>
                   <label className="flex cursor-pointer items-center gap-4 border-b border-slate-700 p-5">

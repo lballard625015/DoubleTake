@@ -171,7 +171,7 @@ export default function TrusteeView() {
                     <ul className="mt-4 space-y-2">
                       {[...active].sort((a, b) => b.urgencyScore - a.urgencyScore).slice(0, 4).map((alert) => (
                         <li key={alert.id} className="flex items-center gap-3 rounded-lg bg-slate-800 p-3">
-                          <span className={`rounded-md px-2 py-1 text-xs font-semibold ${alert.urgencyScore >= 8 ? 'bg-rose-400/10 text-rose-200' : 'bg-amber-400/10 text-amber-200'}`}>{alert.urgencyScore}/10</span>
+                          <span className={`rounded-md px-2 py-1 text-xs font-semibold ${alert.urgencyScore >= 8 ? 'bg-red-400/10 text-red-200' : 'bg-amber-400/10 text-amber-200'}`}>{alert.urgencyScore}/10</span>
                           <span className="min-w-0 flex-1 truncate text-sm text-slate-100">{alert.title}</span>
                           <span className="text-xs text-slate-400">{timeAgo(alert.createdAt)}</span>
                         </li>

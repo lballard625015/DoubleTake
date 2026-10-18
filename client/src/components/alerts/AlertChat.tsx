@@ -52,6 +52,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
     try {
       setError(null)
       await onUpdate(alert.id, patch)
+      if (patch.status === 'resolved') onClose()
       return true
     } catch (err) {
       setError(errorMessage(err))

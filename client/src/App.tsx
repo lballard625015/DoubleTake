@@ -14,6 +14,11 @@ import type { UserRole } from './types'
 export const DEV_BYPASS = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS === 'true'
 
 const ROLES: UserRole[] = ['parent', 'child', 'trustee']
+const ROLE_LABEL: Record<UserRole, string> = {
+  parent: 'Account Holder',
+  child: 'Relative',
+  trustee: 'Trustee',
+}
 const isRole = (v: unknown): v is UserRole => ROLES.includes(v as UserRole)
 
 function RoleView({ role }: { role: UserRole }) {
@@ -45,7 +50,7 @@ function RolePicker({ message, onPick }: { message: string; onPick: (role: UserR
               className="h-12 justify-between rounded-md bg-slate-900 px-4 text-left capitalize text-white hover:bg-slate-800"
               onClick={() => onPick(r)}
             >
-              {r}
+              {ROLE_LABEL[r]}
               <ArrowRight className="size-4" />
             </Button>
           ))}
@@ -94,7 +99,7 @@ function DevApp() {
   if (!role) return <RolePicker message="Dev mode: Auth0 bypassed. Choose a role." onPick={choose} />
   return (
     <>
-      <RoleBar label={`Authentication bypassed · ${role[0].toUpperCase()}${role.slice(1)} workspace`} demo onSwitch={() => choose(null)} />
+      <RoleBar label={`Authentication bypassed · ${ROLE_LABEL[role]} workspace`} demo onSwitch={() => choose(null)} />
       <RoleView role={role} />
     </>
   )

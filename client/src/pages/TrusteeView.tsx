@@ -8,6 +8,7 @@ import InitialScanGate from '@/components/layout/InitialScanGate'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useFamilyPlan } from '@/hooks/useFamilyPlan'
 import { useAlerts } from '@/hooks/useAlerts'
+import { useNessieAccount } from '@/hooks/useNessieAccount'
 import { useNessie } from '@/hooks/useNessie'
 import CommunityView from '@/pages/CommunityView'
 import { RichText, STATUS_STYLE, timeAgo, TYPE_LABEL } from '@/lib/format'
@@ -19,7 +20,8 @@ const fmt = (iso?: string) =>
 const rowTint = (score: number) => (score >= 8 ? 'bg-red-50' : score >= 5 ? 'bg-amber-50' : 'bg-white')
 
 export default function TrusteeView() {
-  const { alerts, scanning, initialScanComplete, error, scan } = useAlerts(true)
+  const { accountId } = useNessieAccount()
+  const { alerts, scanning, initialScanComplete, error, scan } = useAlerts(true, accountId)
   const { holds, error: holdError } = useNessie()
   const { checkIns, error: checkInError } = useFamilyCheckIns()
   const { plan, error: planError, progress } = useFamilyPlan()
@@ -116,7 +118,7 @@ export default function TrusteeView() {
   const select = 'rounded-md border border-slate-300 bg-white px-3 py-2 text-sm'
 
   if (!initialScanComplete) {
-    return <InitialScanGate scanning={scanning} error={error ?? holdError ?? checkInError ?? planError} onRetry={() => void scan()} />
+    return <InitialScanGate scanning={scanning} accountId={accountId} error={error ?? holdError ?? checkInError ?? planError} onRetry={() => void scan()} />
   }
 
   return (

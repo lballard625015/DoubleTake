@@ -44,16 +44,18 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
 
   const messageCount = (alert?.messages?.length ?? 0) + (pending ? 1 : 0)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messageCount, sending])
+    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [alertId, messageCount, sending])
 
   const act = async (patch: { status?: Alert['status']; notes?: string }) => {
-    if (!alert) return
+    if (!alert) return false
     try {
       setError(null)
       await onUpdate(alert.id, patch)
+      return true
     } catch (err) {
       setError(errorMessage(err))
+      return false
     }
   }
 
@@ -76,8 +78,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
   }
 
   const saveNote = async () => {
-    await act({ notes: note.trim() })
-    setNoting(false)
+    if (await act({ notes: note.trim() })) setNoting(false)
   }
 
   const tone = alert ? TONE[urgencyTone(alert.urgencyScore)] : TONE.blue
@@ -98,7 +99,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
       >
         {alert && (
           <>
-            <div className="shrink-0 max-h-[45vh] overflow-y-auto border-b border-slate-200 p-6">
+            <div className="shrink-0 border-b border-slate-200 p-5 sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{TYPE_LABEL[alert.type]}</p>
@@ -130,58 +131,54 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
                   </button>
                 </div>
               </div>
-              {!expanded && (
-                <>
-                  <p className="mt-4 text-sm leading-relaxed text-slate-700">{alert.description}</p>
-                  <details className="mt-4 border-y border-slate-200 py-3">
-                    <summary className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-950">
-                      Alert evidence and guidance
-                    </summary>
-                    <section className="pt-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Why this was flagged</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                        {alert.ruleSummary ?? 'This alert matched a monitoring rule using the available account history.'}
-                      </p>
-                      {alert.triggerEvidence && alert.triggerEvidence.length > 0 && (
-                        <ul className="mt-3 space-y-2">
-                          {alert.triggerEvidence.map((evidence, index) => (
-                            <li key={`${index}-${evidence}`} className="flex gap-2 text-sm leading-relaxed text-slate-700">
-                              <span className="mt-2 size-1.5 shrink-0 bg-sky-700" />
-                              {evidence}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                        This is a rule match, not a finding of fraud. The rule only reflects data available to this demo.
-                      </p>
-                      {alert.knownScamPattern && (
-                        <p className="mt-2 text-xs text-slate-500">
-                          Resembles: <span className="font-medium text-slate-700">{alert.knownScamPattern}</span>
-                        </p>
-                      )}
-                      {alert.notes && (
-                        <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                          <span className="font-semibold">Note:</span> {alert.notes}
-                        </p>
-                      )}
-                      <div className="mt-4 flex gap-3 border-l-2 border-sky-700 bg-[#f8fafc] p-4">
-                        <Lightbulb className="mt-0.5 size-5 shrink-0 text-yellow-600" />
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Suggested conversation starter</p>
-                          <p className="mt-1 text-sm leading-relaxed text-slate-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
-                          <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                            A check-in shares a neutral request to review a transaction—not this alert or its details.
-                          </p>
-                        </div>
-                      </div>
-                    </section>
-                  </details>
-                </>
-              )}
             </div>
 
             <div role="log" aria-label="Alert guidance conversation" aria-live="polite" className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 p-6">
+              <p className="text-sm leading-relaxed text-slate-700">{alert.description}</p>
+              <details className="border-y border-slate-200 bg-white px-4 py-3">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-950">
+                  Alert evidence and guidance
+                </summary>
+                <section className="pt-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Why this was flagged</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                    {alert.ruleSummary ?? 'This alert matched a monitoring rule using the available account history.'}
+                  </p>
+                  {alert.triggerEvidence && alert.triggerEvidence.length > 0 && (
+                    <ul className="mt-3 space-y-2">
+                      {alert.triggerEvidence.map((evidence, index) => (
+                        <li key={`${index}-${evidence}`} className="flex gap-2 text-sm leading-relaxed text-slate-700">
+                          <span className="mt-2 size-1.5 shrink-0 bg-sky-700" />
+                          {evidence}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                    This is a rule match, not a finding of fraud. The rule only reflects data available to this demo.
+                  </p>
+                  {alert.knownScamPattern && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Resembles: <span className="font-medium text-slate-700">{alert.knownScamPattern}</span>
+                    </p>
+                  )}
+                  {alert.notes && (
+                    <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                      <span className="font-semibold">Note:</span> {alert.notes}
+                    </p>
+                  )}
+                  <div className="mt-4 flex gap-3 border-l-2 border-sky-700 bg-[#f8fafc] p-4">
+                    <Lightbulb className="mt-0.5 size-5 shrink-0 text-yellow-600" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Suggested conversation starter</p>
+                      <p className="mt-1 text-sm leading-relaxed text-slate-900">&ldquo;{alert.conversationStarter}&rdquo;</p>
+                      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                        A check-in shares a neutral request to review a transaction—not this alert or its details.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </details>
               <p className="border border-sky-100 bg-white p-3 text-xs leading-relaxed text-slate-600">
                 <span className="font-semibold text-slate-800">About this guide:</span> Your question goes to DoubleTake’s server, not an AI model or another person. Replies use fixed rules and alert details; they cannot verify a transaction.
               </p>
@@ -216,7 +213,7 @@ export default function AlertChat({ alert, onClose, onUpdate, onSend, onRequestC
               <div ref={endRef} />
             </div>
 
-            <div className="shrink-0 max-h-[45vh] overflow-y-auto border-t border-slate-200 bg-white p-4">
+            <div className="shrink-0 border-t border-slate-200 bg-white p-4">
               {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
               {noting && (
                 <div className="mb-3">

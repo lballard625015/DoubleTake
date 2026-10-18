@@ -1,47 +1,58 @@
 // Parent's home screen: calm, standard-banking view of balance and recent transactions. Never shows alerts or suspicion indicators.
 import { useEffect, useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight, Check, CircleHelp, History, Landmark, ShieldCheck, SlidersHorizontal, Users, UserRoundCheck, Eye, HeartHandshake } from 'lucide-react'
-import { config } from '@/config'
 import SectionTabs from '@/components/layout/SectionTabs'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useFamilyPlan } from '@/hooks/useFamilyPlan'
+import { useNessieAccount } from '@/hooks/useNessieAccount'
 import { api, errorMessage } from '@/lib/api'
 import { money, timeAgo } from '@/lib/format'
 import { transactionCategoryName } from '@/lib/transaction'
+import NessieAccountSettings from '@/components/settings/NessieAccountSettings'
 import type { NessieAccount, Transaction } from '@/types'
 
 const dateLabel = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
 export default function ParentView() {
-  const [account, setAccount] = useState<NessieAccount | null>(null)
-  const [txns, setTxns] = useState<(Transaction & { merchant: string })[]>([])
-  const [loaded, setLoaded] = useState(() => !config.accountId)
-  const [error, setError] = useState<string | null>(null)
+  const { accountId } = useNessieAccount()
+  const [accountData, setAccountData] = useState<{
+    accountId: string
+    account: NessieAccount | null
+    txns: (Transaction & { merchant: string })[]
+    error: string | null
+  } | null>(null)
+  const account = accountData?.accountId === accountId ? accountData.account : null
+  const txns = accountData?.accountId === accountId ? accountData.txns : []
+  const error = accountData?.accountId === accountId ? accountData.error : null
+  const loaded = !accountId || accountData?.accountId === accountId
   const [tab, setTab] = useState('home')
   const [filter, setFilter] = useState<'all' | Transaction['type']>('all')
   const { checkIns, error: checkInError, respondToCheckIn } = useFamilyCheckIns()
   const { plan, error: planError, updatePlan, toggleStep, progress } = useFamilyPlan()
 
   useEffect(() => {
-    if (!config.accountId) {
+    if (!accountId) {
       return
     }
-    const id = encodeURIComponent(config.accountId)
+    const id = encodeURIComponent(accountId)
+    let current = true
     Promise.allSettled([
       api.get<NessieAccount>(`/nessie/account/${id}`),
       api.get<(Transaction & { merchant: string })[]>(`/nessie/account/${id}/transactions?limit=50`),
     ])
       .then(([accountResult, transactionsResult]) => {
         const errors: string[] = []
-        if (accountResult.status === 'fulfilled') setAccount(accountResult.value.data)
-        else errors.push(errorMessage(accountResult.reason))
-        if (transactionsResult.status === 'fulfilled') setTxns(transactionsResult.value.data)
-        else errors.push(errorMessage(transactionsResult.reason))
-        if (errors.length) setError(errors.join(' '))
+        const account = accountResult.status === 'fulfilled' ? accountResult.value.data : null
+        const txns = transactionsResult.status === 'fulfilled' ? transactionsResult.value.data : []
+        if (accountResult.status === 'rejected') errors.push(errorMessage(accountResult.reason))
+        if (transactionsResult.status === 'rejected') errors.push(errorMessage(transactionsResult.reason))
+        if (current) setAccountData({ accountId, account, txns, error: errors.length ? errors.join(' ') : null })
       })
-      .finally(() => setLoaded(true))
-  }, [])
+    return () => {
+      current = false
+    }
+  }, [accountId])
 
   const pendingCheckIns = checkIns.filter((item) => item.status === 'awaiting')
   const visibleTxns = txns.filter((transaction) => filter === 'all' || transaction.type === filter)
@@ -117,7 +128,7 @@ export default function ParentView() {
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div>
                   <div className="flex items-center gap-2 text-sm font-medium text-sky-800"><ShieldCheck className="size-4" /> Your account, your choices</div>
-                  <p className="mt-5 text-sm text-slate-600">{account?.nickname ?? 'Checking'} balance</p>
+                  <p className="mt-5 text-sm text-slate-600">{account ? `${account.nickname} balance` : accountId ? 'Checking balance' : 'No linked account'}</p>
                   <p className="mt-1 text-5xl font-semibold tracking-tight text-slate-950 md:text-6xl">
                     {!plan.showBalance ? '••••••' : account ? money(account.balance) : loaded ? '—' : '...'}
                   </p>
@@ -192,7 +203,7 @@ export default function ParentView() {
               {txns.length === 0 ? (
                 <p className="px-6 pb-6 text-base text-slate-500">
                   {loaded
-                    ? config.accountId ? 'No recent transactions.' : 'Connect a Nessie demo account to view transactions.'
+                    ? accountId ? 'No recent transactions.' : 'Connect a Nessie demo account to view transactions.'
                     : 'Loading account activity…'}
                 </p>
               ) : (
@@ -279,7 +290,7 @@ export default function ParentView() {
               ))}
               {!visibleTxns.length && <p className="py-8 text-center text-slate-500">
                 {loaded
-                  ? config.accountId ? 'No transactions in this category.' : 'Connect a Nessie demo account to view transactions.'
+                  ? accountId ? 'No transactions in this category.' : 'Connect a Nessie demo account to view transactions.'
                   : 'Loading account activity…'}
               </p>}
             </div>
@@ -383,10 +394,36 @@ export default function ParentView() {
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="text-lg font-semibold">Account information</h2>
               <dl className="mt-3 divide-y divide-slate-100 text-base">
-                <div className="flex justify-between gap-4 py-3"><dt className="text-slate-500">Account</dt><dd className="font-medium">{account?.nickname ?? 'Checking'}</dd></div>
+                <div className="flex justify-between gap-4 py-3"><dt className="text-slate-500">Account</dt><dd className="font-medium">{account?.nickname ?? (accountId ? 'Account linked' : 'No account linked')}</dd></div>
                 <div className="flex justify-between gap-4 py-3"><dt className="text-slate-500">Trusted contact</dt><dd className="font-medium">{plan.trustedContact}</dd></div>
                 <div className="flex justify-between gap-4 py-3"><dt className="text-slate-500">Alert details shared</dt><dd className="font-medium">Only when you open them together</dd></div>
               </dl>
+            </div>
+            <NessieAccountSettings />
+            <div className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 className="font-semibold text-slate-950">Family protection preferences</h2>
+              <p className="mt-1 text-sm text-slate-600">Fill in the contact details you want to use for the family-plan demo.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Trusted contact name
+                  <input
+                    value={plan.trustedContact}
+                    maxLength={80}
+                    onChange={(event) => updatePlan({ trustedContact: event.target.value })}
+                    className="mt-1.5 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-700/20"
+                  />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Relationship
+                  <input
+                    value={plan.relationship}
+                    maxLength={60}
+                    onChange={(event) => updatePlan({ relationship: event.target.value })}
+                    className="mt-1.5 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-700/20"
+                  />
+                </label>
+              </div>
+              <p className="mt-3 text-xs text-slate-500">These preferences save in this browser and are not a secure invitation or shared account.</p>
             </div>
             <p className="rounded-xl bg-sky-50 p-4 text-sm leading-relaxed text-sky-950">
               DoubleTake is a prototype and does not control a real bank transfer. Contact your bank directly if you need to freeze a card, report fraud, or change account access.

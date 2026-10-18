@@ -1,6 +1,6 @@
 // Axios client for the DoubleTake server. Attaches the Auth0 token when available and, in dev, the dev-bypass role headers.
 import axios from 'axios'
-import { config } from '@/config'
+import { getNessieAccountId } from '@/lib/nessieAccountSelection'
 import type { UserRole } from '@/types'
 
 let role: UserRole | null = null
@@ -25,7 +25,10 @@ api.interceptors.request.use(async (req) => {
   }
   if (import.meta.env.DEV) {
     if (role) req.headers.set('x-dev-role', role)
-    if (config.accountId) req.headers.set('x-dev-account-id', config.accountId)
+    if (!req.headers.has('x-dev-account-id')) {
+      const accountId = getNessieAccountId()
+      if (accountId) req.headers.set('x-dev-account-id', accountId)
+    }
   }
   return req
 })

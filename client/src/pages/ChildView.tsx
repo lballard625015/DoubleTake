@@ -26,6 +26,8 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { useNessie } from '@/hooks/useNessie'
 import { useFamilyCheckIns } from '@/hooks/useFamilyCheckIns'
 import { useFamilyPlan } from '@/hooks/useFamilyPlan'
+import { useNessieAccount } from '@/hooks/useNessieAccount'
+import NessieAccountSettings from '@/components/settings/NessieAccountSettings'
 import { config } from '@/config'
 import { api, errorMessage } from '@/lib/api'
 import { money, STATUS_STYLE, TONE, timeAgo, urgencyTone } from '@/lib/format'
@@ -34,14 +36,14 @@ import type { Transaction } from '@/types'
 
 const dateLabel = (iso: string) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 export default function ChildView() {
-  const { alerts, scanning, initialScanComplete, error, refresh, scan, update, sendMessage } = useAlerts(true)
+  const { accountId } = useNessieAccount()
+  const { alerts, scanning, initialScanComplete, error, refresh, scan, update, sendMessage } = useAlerts(true, accountId)
   const { holds, error: holdError, resolveHold } = useNessie()
   const { checkIns, error: checkInError, requestCheckIn } = useFamilyCheckIns()
   const { plan, error: planError, updatePlan, toggleStep, toggleFocusArea, progress } = useFamilyPlan()
   const [tab, setTab] = useState('overview')
   const [openId, setOpenId] = useState<string | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [activityError, setActivityError] = useState<string | null>(null)
+  const [activity, setActivity] = useState<{ accountId: string; transactions: Transaction[]; error: string | null } | null>(null)
   const [greeting] = useState(() => new Date().getHours() < 12 ? 'morning' : 'afternoon')
   const [copied, setCopied] = useState(false)
   const [accountIdPreference, setAccountIdPreference] = useState(() => {
@@ -54,6 +56,8 @@ export default function ChildView() {
 
   const activeCount = alerts.filter((a) => a.status !== 'resolved').length
   const openAlert = alerts.find((a) => a.id === openId) ?? null
+  const transactions = activity?.accountId === accountId ? activity.transactions : []
+  const activityError = activity?.accountId === accountId ? activity.error : null
   const purchases = transactions.filter((transaction) => transaction.type === 'purchase')
   const purchaseCategories = Object.entries(
     purchases.reduce<Record<string, number>>((totals, purchase) => {
@@ -73,12 +77,20 @@ export default function ChildView() {
   }
 
   useEffect(() => {
-    if (!config.accountId) return
+    if (!accountId) return
+    let current = true
     api
-      .get<Transaction[]>(`/nessie/account/${encodeURIComponent(config.accountId)}/transactions?limit=25`)
-      .then(({ data }) => setTransactions(data))
-      .catch((err: unknown) => setActivityError(errorMessage(err)))
-  }, [])
+      .get<Transaction[]>(`/nessie/account/${encodeURIComponent(accountId)}/transactions?limit=25`)
+      .then(({ data }) => {
+        if (current) setActivity({ accountId, transactions: data, error: null })
+      })
+      .catch((err: unknown) => {
+        if (current) setActivity({ accountId, transactions: [], error: errorMessage(err) })
+      })
+    return () => {
+      current = false
+    }
+  }, [accountId])
 
   const items = [
     { id: 'overview', label: 'Overview', icon: Home },
@@ -90,7 +102,7 @@ export default function ChildView() {
   ]
 
   if (!initialScanComplete) {
-    return <InitialScanGate scanning={scanning} error={error} onRetry={() => void scan()} />
+    return <InitialScanGate scanning={scanning} accountId={accountId} error={error} onRetry={() => void scan()} />
   }
 
   return (
@@ -179,7 +191,7 @@ export default function ChildView() {
                   )}
                   <button
                     onClick={() => void scan()}
-                    disabled={scanning || !config.accountId}
+                    disabled={scanning || !accountId}
                     className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {scanning ? 'Scanning…' : 'Run account scan'}
@@ -443,7 +455,11 @@ export default function ChildView() {
                       onClick={() => {
                         void navigator.clipboard.writeText('I’m doing my regular check-in. Would you like to look at anything together? There’s no rush.')
                           .then(() => setCopied(true))
-                          .catch((clipboardError: unknown) => setActivityError(errorMessage(clipboardError, 'Could not copy the check-in message.')))
+                          .catch((clipboardError: unknown) => setActivity((previous) => ({
+                            accountId,
+                            transactions: previous?.accountId === accountId ? previous.transactions : [],
+                            error: errorMessage(clipboardError, 'Could not copy the check-in message.'),
+                          })))
                       }}
                       className="mt-3 w-full rounded-lg border border-slate-600 px-3 py-2.5 text-sm font-medium text-slate-200 transition hover:border-sky-300/50 hover:bg-sky-300/5"
                     >
@@ -523,13 +539,40 @@ export default function ChildView() {
                   </label>
                   <div className="p-5">
                     <p className="text-sm font-medium text-white">Connected monitoring setup</p>
-                    <p className="mt-1 text-xs text-slate-400">These values are set in local environment configuration.</p>
+                    <p className="mt-1 text-xs text-slate-400">Your selected Nessie sandbox account and monitoring area.</p>
                     <dl className="mt-3 space-y-2 text-xs">
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Account</dt><dd className="max-w-[65%] truncate text-right text-slate-300">{showAccountId ? config.accountId || 'Not configured' : 'Hidden'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Account</dt><dd className="max-w-[65%] truncate text-right text-slate-300">{showAccountId ? accountId || 'Not configured' : 'Hidden'}</dd></div>
                       <div className="flex justify-between gap-3"><dt className="text-slate-500">Monitoring area</dt><dd className="text-right text-slate-300">{config.homeLocation.lat.toFixed(3)}, {config.homeLocation.lng.toFixed(3)}</dd></div>
                       <div className="flex justify-between gap-3"><dt className="text-slate-500">Explanation engine</dt><dd className="text-right text-slate-300">On-device rules · no AI API</dd></div>
                     </dl>
                   </div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <NessieAccountSettings />
+              </div>
+              <div className="mt-4 rounded-lg border border-slate-200 bg-white p-5">
+                <h2 className="font-semibold text-slate-950">Family protection preferences</h2>
+                <p className="mt-1 text-sm text-slate-600">These demo preferences are editable and saved in this browser.</p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    Trusted contact name
+                    <input
+                      value={plan.trustedContact}
+                      maxLength={80}
+                      onChange={(event) => updatePlan({ trustedContact: event.target.value })}
+                      className="mt-1.5 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-700/20"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-slate-700">
+                    Relationship
+                    <input
+                      value={plan.relationship}
+                      maxLength={60}
+                      onChange={(event) => updatePlan({ relationship: event.target.value })}
+                      className="mt-1.5 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-700/20"
+                    />
+                  </label>
                 </div>
               </div>
               <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-5">

@@ -4,7 +4,7 @@ import { config } from '@/config'
 import { api, errorMessage } from '@/lib/api'
 import type { Alert, ChatMessage } from '@/types'
 
-export function useAlerts(autoScan = false) {
+export function useAlerts(autoScan = false, accountId = config.accountId) {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [scanning, setScanning] = useState(autoScan)
   const [initialScanComplete, setInitialScanComplete] = useState(!autoScan)
@@ -26,17 +26,17 @@ export function useAlerts(autoScan = false) {
     setScanning(true)
     setError(null)
     try {
-      if (!config.accountId) {
+      if (!accountId) {
         throw new Error('Connect a Nessie demo account before scanning.')
       }
-      await api.post('/alerts/scan', { accountId: config.accountId, homeLocation: config.homeLocation })
+      await api.post('/alerts/scan', { accountId, homeLocation: config.homeLocation })
       if (await refresh()) setInitialScanComplete(true)
     } catch (err) {
       setError(errorMessage(err))
     } finally {
       setScanning(false)
     }
-  }, [refresh])
+  }, [accountId, refresh])
 
   useEffect(() => {
     const initialLoadTimer = window.setTimeout(() => {

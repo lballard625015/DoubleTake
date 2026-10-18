@@ -1,13 +1,14 @@
 import { LoaderCircle, ScanSearch, ShieldCheck } from 'lucide-react'
-import { config } from '@/config'
+import NessieAccountSettings from '@/components/settings/NessieAccountSettings'
 
 interface Props {
   scanning: boolean
+  accountId: string
   error: string | null
   onRetry: () => void
 }
 
-export default function InitialScanGate({ scanning, error, onRetry }: Props) {
+export default function InitialScanGate({ scanning, accountId, error, onRetry }: Props) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-12 text-slate-900">
       <section className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/5 sm:p-10">
@@ -25,11 +26,11 @@ export default function InitialScanGate({ scanning, error, onRetry }: Props) {
         </p>
         {error && (
           <div role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-            <p className="font-semibold">{config.accountId ? 'The initial scan could not be completed.' : 'No demo account is connected yet.'}</p>
-            <p className="mt-1">{config.accountId ? error : 'Set VITE_NESSIE_ACCOUNT_ID in client/.env, then restart the client.'}</p>
+            <p className="font-semibold">{accountId ? 'The initial scan could not be completed.' : 'No demo account is connected yet.'}</p>
+            <p className="mt-1">{error}</p>
           </div>
         )}
-        {!scanning && config.accountId && (
+        {!scanning && accountId && (
           <button
             type="button"
             onClick={onRetry}
@@ -39,6 +40,7 @@ export default function InitialScanGate({ scanning, error, onRetry }: Props) {
             {error ? 'Retry initial scan' : 'Run initial scan'}
           </button>
         )}
+        {!accountId && <div className="mt-6 text-left"><NessieAccountSettings /></div>}
       </section>
     </main>
   )

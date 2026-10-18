@@ -575,10 +575,6 @@ export default function ChildView() {
                   </label>
                 </div>
               </div>
-              <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-5">
-                <h2 className="font-semibold text-amber-100">Prototype privacy note</h2>
-                <p className="mt-1 text-sm leading-relaxed text-amber-100/70">Family plan details and check-ins live in this browser’s local storage. Do not enter sensitive personal data. They are not securely shared across devices or accounts.</p>
-              </div>
             </section>
           )}
 

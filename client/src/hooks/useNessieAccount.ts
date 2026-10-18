@@ -26,6 +26,7 @@ export function useNessieAccount() {
   const [linkError, setLinkError] = useState<string | null>(null)
   const [linking, setLinking] = useState(false)
   const [linked, setLinked] = useState(false)
+  const [verifiedAccount, setVerifiedAccount] = useState<NessieAccount | null>(null)
 
   useEffect(() => {
     const refresh = () => setStored(readAccount())
@@ -56,6 +57,7 @@ export function useNessieAccount() {
       setStored({ accountId, error: null })
       window.dispatchEvent(new Event(NESSIE_ACCOUNT_CHANGE_EVENT))
       setLinked(true)
+      setVerifiedAccount(data)
       return true
     } catch (error) {
       setLinkError(errorMessage(error, error instanceof Error ? error.message : 'Could not link this Nessie account.'))
@@ -71,6 +73,7 @@ export function useNessieAccount() {
       setStored({ accountId: config.accountId, error: null })
       setLinkError(null)
       setLinked(false)
+      setVerifiedAccount(null)
       window.dispatchEvent(new Event(NESSIE_ACCOUNT_CHANGE_EVENT))
     } catch (error) {
       setStored((previous) => ({
@@ -86,6 +89,7 @@ export function useNessieAccount() {
       setStored({ accountId: '', error: null })
       setLinkError(null)
       setLinked(false)
+      setVerifiedAccount(null)
       window.dispatchEvent(new Event(NESSIE_ACCOUNT_CHANGE_EVENT))
     } catch (error) {
       setStored((previous) => ({
@@ -100,6 +104,7 @@ export function useNessieAccount() {
     error: stored.error ?? linkError,
     linking,
     linked,
+    verifiedAccount,
     linkAccount,
     useConfiguredAccount,
     disconnectAccount,
